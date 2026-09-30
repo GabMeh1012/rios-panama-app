@@ -17,7 +17,7 @@ export default function LoginScreen({ onBack, onLogin }) {
       return;
     }
     setError("");
-    onLogin({ nombre: modo === "registro" ? nombre.trim() : correo.split("@")[0] });
+    onLogin({ nombre: modo === "registro" ? nombre.trim() : correo.split("@")[0], correo: correo.trim() });
   }
 
   return (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, Rectangle, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { noticias, comentariosSemilla, tiposContaminacion } from "../data/seedReports";
@@ -32,12 +32,23 @@ function VistaZona({ zona }) {
   return null;
 }
 
-export default function MapaScreen({ reports, usuario, onSelect, onNuevoReporte, onIrLogin, onComentar }) {
+export default function MapaScreen({ reports, usuario, vista, onSelect, onNuevoReporte, onIrLogin, onComentar }) {
   const centro = [8.6, -80.2]; // vista general de Panamá
   const [zona, setZona] = useState("Todas");
   const [problema, setProblema] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
   const [comentario, setComentario] = useState("");
+
+  // Refs para el scroll suave hacia cada sección cuando se toca una pestaña
+  // del menú o de la barra inferior (Inicio / Mapa / Comunidad).
+  const inicioRef = useRef(null);
+  const mapaRef = useRef(null);
+  const comunidadRef = useRef(null);
+
+  useEffect(() => {
+    const refs = { inicio: inicioRef, mapa: mapaRef, comunidad: comunidadRef };
+    refs[vista]?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [vista]);
 
   const filtrados = reports.filter((r) => {
     const pasaZona = zona === "Todas" || r.provincia.includes(zona);
@@ -61,27 +72,10 @@ export default function MapaScreen({ reports, usuario, onSelect, onNuevoReporte,
 
   return (
     <div className="screen">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "10px 14px 0" }}>
-        {usuario ? (
-          <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>Hola, {usuario.nombre}</span>
-        ) : (
-          <button
-            onClick={onIrLogin}
-            style={{
-              background: "transparent",
-              border: "1.5px solid var(--border-strong)",
-              color: "var(--navy)",
-              fontSize: 12,
-              fontWeight: 600,
-              padding: "6px 13px",
-              borderRadius: 999,
-              cursor: "pointer",
-            }}
-          >
-            Iniciar sesión
-          </button>
-        )}
-      </div>
+      <div ref={inicioRef} />
+      {usuario && (
+        <p style={{ margin: "10px 14px 0", fontSize: 12, color: "var(--text-secondary)" }}>Hola, {usuario.nombre} 👋</p>
+      )}
 
       <div className="search-box">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -124,7 +118,7 @@ export default function MapaScreen({ reports, usuario, onSelect, onNuevoReporte,
         ))}
       </div>
 
-      <div className="map-wrap" style={{ height: 236, margin: "10px 14px", borderRadius: 14, overflow: "hidden", width: "auto" }}>
+      <div ref={mapaRef} className="map-wrap" style={{ height: 236, margin: "10px 14px", borderRadius: 14, overflow: "hidden", width: "auto" }}>
         <MapContainer center={centro} zoom={7} style={{ height: "100%", width: "100%" }}>
           <TileLayer
             attribution='&copy; OpenStreetMap contributors'
@@ -192,7 +186,7 @@ export default function MapaScreen({ reports, usuario, onSelect, onNuevoReporte,
         ))}
       </div>
 
-      <div className="section-title">Comunidad</div>
+      <div ref={comunidadRef} className="section-title">Comunidad</div>
       <div style={{ padding: "0 14px 8px" }}>
         {comentariosSemilla.map((c, i) => (
           <div key={i} style={{ display: "flex", gap: 8, marginBottom: 10 }}>
