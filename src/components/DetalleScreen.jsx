@@ -14,6 +14,24 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
 
   // Todos los reportes de este mismo río (cada uno puede ser un tramo distinto).
   const delMismoRio = reports.filter((r) => r.rio === report.rio);
+  const fechaMasReciente = delMismoRio.reduce((max, r) => (r.fecha > max ? r.fecha : max), delMismoRio[0].fecha);
+
+  // Dirección de la tendencia, comparando los dos últimos meses con datos reales.
+  let tendenciaTexto = "Sin datos suficientes";
+  let tendenciaColor = "var(--text-secondary)";
+  if (tendencia.length >= 2) {
+    const diff = tendencia[tendencia.length - 1].total - tendencia[tendencia.length - 2].total;
+    if (diff > 0) {
+      tendenciaTexto = "↑ Empeorando";
+      tendenciaColor = "var(--critico)";
+    } else if (diff < 0) {
+      tendenciaTexto = "↓ Mejorando";
+      tendenciaColor = "var(--leve)";
+    } else {
+      tendenciaTexto = "→ Estable";
+      tendenciaColor = "var(--moderado)";
+    }
+  }
 
   // Contaminantes más comunes reportados en este río, calculado a partir de
   // los datos reales de los reportes (no son cifras inventadas).
@@ -36,11 +54,15 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
   });
   const marcasOrdenadas = Object.entries(conteoMarcas).sort(([, a], [, b]) => b - a);
 
+  // Fotos reales subidas para este río (si nadie ha subido foto todavía, se
+  // muestra un estado vacío en vez de inventar imágenes de relleno).
+  const fotos = delMismoRio.filter((r) => r.foto).map((r) => ({ id: r.id, foto: r.foto }));
+
   return (
     <div className="screen">
       <div
         className="detail-photo"
-        style={report.foto ? { backgroundImage: `url(${report.foto})` } : undefined}
+        style={report.foto ? { backgroundImage: `url(${report.foto})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       />
       <div className="detail-body">
         <div className="detail-header">
@@ -62,6 +84,26 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
         )}
         <div className="detail-row">
           📍 {report.lat.toFixed(4)}, {report.lng.toFixed(4)}
+        </div>
+      </div>
+
+      {/* Resumen rápido en tarjetas, como en el wireframe. */}
+      <div className="stat-grid">
+        <div className="stat-tile">
+          <div className="stat-tile-label">Reportes totales</div>
+          <div className="stat-tile-value">{delMismoRio.length}</div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-tile-label">Reporte más reciente</div>
+          <div className="stat-tile-value" style={{ fontSize: 15 }}>{fechaMasReciente}</div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-tile-label">Provincia</div>
+          <div className="stat-tile-value" style={{ fontSize: 15 }}>{report.provincia}</div>
+        </div>
+        <div className="stat-tile">
+          <div className="stat-tile-label">Tendencia</div>
+          <div className="stat-tile-value" style={{ fontSize: 15, color: tendenciaColor }}>{tendenciaTexto}</div>
         </div>
       </div>
 
@@ -92,30 +134,43 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
         </>
       )}
 
-      {tendencia.length > 1 && (
-        <>
-          <div className="section-title">Tendencia de reportes por mes</div>
-          <div style={{ margin: "0 16px 18px" }}>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 70 }}>
-              {tendencia.map((t) => (
-                <div key={t.mes} style={{ textAlign: "center", flex: 1 }}>
-                  <div
-                    style={{
-                      height: `${(t.total / maxTotal) * 50 + 6}px`,
-                      background: "linear-gradient(180deg, var(--teal), var(--navy))",
-                      borderRadius: 4,
-                      marginBottom: 4,
-                    }}
-                    title={`${t.total} reportes`}
-                  />
-                  <span style={{ fontSize: 10, color: "var(--text-secondary)" }}>
-                    {nombresMes[t.mes.slice(5, 7)]}
-                  </span>
-                </div>
-              ))}
-            </div>
+      <div className="section-title">Tendencia de reportes por mes</div>
+      <div style={{ margin: "0 16px 18px" }}>
+        {tendencia.length > 0 ? (
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 70 }}>
+            {tendencia.map((t) => (
+              <div key={t.mes} style={{ textAlign: "center", flex: 1 }}>
+                <div
+                  style={{
+                    height: `${(t.total / maxTotal) * 50 + 6}px`,
+                    background: "linear-gradient(180deg, var(--teal), var(--navy))",
+                    borderRadius: 4,
+                    marginBottom: 4,
+                  }}
+                  title={`${t.total} reportes`}
+                />
+                <span style={{ fontSize: 10, color: "var(--text-secondary)" }}>
+                  {nombresMes[t.mes.slice(5, 7)]}
+                </span>
+              </div>
+            ))}
           </div>
-        </>
+        ) : (
+          <p style={{ fontSize: 12, color: "var(--text-secondary)" }}>Aún no hay suficiente historial para graficar una tendencia.</p>
+        )}
+      </div>
+
+      <div className="section-title">Fotos de la comunidad</div>
+      {fotos.length > 0 ? (
+        <div className="gallery-grid">
+          {fotos.map((f) => (
+            <div key={f.id} className="gallery-tile" style={{ backgroundImage: `url(${f.foto})` }} />
+          ))}
+        </div>
+      ) : (
+        <p style={{ margin: "0 16px 18px", fontSize: 12, color: "var(--text-secondary)" }}>
+          Aún no hay fotos para este río — sé el primero en reportar con una foto.
+        </p>
       )}
 
       <div className="section-title">Información adicional</div>
@@ -125,33 +180,34 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
         <dt>Provincia</dt>
         <dd>{report.provincia}</dd>
         <dt>Reporte más reciente</dt>
-        <dd>{delMismoRio.reduce((max, r) => (r.fecha > max ? r.fecha : max), delMismoRio[0].fecha)}</dd>
+        <dd>{fechaMasReciente}</dd>
       </dl>
 
-      {delMismoRio.length > 1 && (
-        <>
-          <div className="section-title">Reportes a lo largo del río</div>
-          <div style={{ margin: "0 16px 18px", borderRadius: 12, overflow: "hidden", height: 150 }}>
-            <MapContainer
-              center={[report.lat, report.lng]}
-              zoom={12}
-              style={{ height: "100%", width: "100%" }}
-              scrollWheelZoom={false}
+      <div className="section-title">Reportes a lo largo del río</div>
+      <div style={{ margin: "0 16px 18px", borderRadius: 12, overflow: "hidden", height: 150 }}>
+        <MapContainer
+          center={[report.lat, report.lng]}
+          zoom={12}
+          style={{ height: "100%", width: "100%" }}
+          scrollWheelZoom={false}
+        >
+          <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          {delMismoRio.map((r) => (
+            <CircleMarker
+              key={r.id}
+              center={[r.lat, r.lng]}
+              radius={7}
+              pathOptions={{ color: colorPorSeveridad[r.severidad], fillOpacity: 0.85, weight: 2 }}
             >
-              <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              {delMismoRio.map((r) => (
-                <CircleMarker
-                  key={r.id}
-                  center={[r.lat, r.lng]}
-                  radius={7}
-                  pathOptions={{ color: colorPorSeveridad[r.severidad], fillOpacity: 0.85, weight: 2 }}
-                >
-                  <Tooltip>{labelSeveridad[r.severidad]} · {r.tipo}</Tooltip>
-                </CircleMarker>
-              ))}
-            </MapContainer>
-          </div>
-        </>
+              <Tooltip>{labelSeveridad[r.severidad]} · {r.tipo}</Tooltip>
+            </CircleMarker>
+          ))}
+        </MapContainer>
+      </div>
+      {delMismoRio.length === 1 && (
+        <p style={{ margin: "-10px 16px 18px", fontSize: 11, color: "var(--text-secondary)" }}>
+          Este río solo tiene un tramo reportado hasta ahora.
+        </p>
       )}
 
       <div className="detail-body" style={{ paddingTop: 0 }}>

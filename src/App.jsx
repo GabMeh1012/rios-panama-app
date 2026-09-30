@@ -13,6 +13,16 @@ export default function App() {
   const [seleccionado, setSeleccionado] = useState(null);
   const [usuario, setUsuario] = useState(null);
   const [comentarios, setComentarios] = useState(comentariosSemilla);
+  const [pendienteReporte, setPendienteReporte] = useState(false);
+
+  function irNuevoReporte() {
+    if (!usuario) {
+      setPendienteReporte(true);
+      setPantalla("login");
+      return;
+    }
+    setPantalla("nuevo");
+  }
 
   function verDetalle(report) {
     setSeleccionado(report);
@@ -35,7 +45,12 @@ export default function App() {
 
   function handleLogin(datosUsuario) {
     setUsuario(datosUsuario);
-    setPantalla("mapa");
+    if (pendienteReporte) {
+      setPendienteReporte(false);
+      setPantalla("nuevo");
+    } else {
+      setPantalla("mapa");
+    }
   }
 
   function agregarComentario(texto) {
@@ -67,13 +82,24 @@ export default function App() {
           reports={reports}
           usuario={usuario}
           onSelect={verDetalle}
-          onNuevoReporte={() => setPantalla("nuevo")}
-          onIrLogin={() => setPantalla("login")}
+          onNuevoReporte={irNuevoReporte}
+          onIrLogin={() => {
+            setPendienteReporte(false);
+            setPantalla("login");
+          }}
           onComentar={agregarComentario}
         />
       )}
 
-      {pantalla === "login" && <LoginScreen onBack={() => setPantalla("mapa")} onLogin={handleLogin} />}
+      {pantalla === "login" && (
+        <LoginScreen
+          onBack={() => {
+            setPendienteReporte(false);
+            setPantalla("mapa");
+          }}
+          onLogin={handleLogin}
+        />
+      )}
 
       {pantalla === "nuevo" && (
         <NuevoReporteScreen onBack={() => setPantalla("mapa")} onGuardar={guardarReporte} />

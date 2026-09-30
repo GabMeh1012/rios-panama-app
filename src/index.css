@@ -518,6 +518,51 @@ body {
   padding: 14px 16px 6px;
 }
 
+/* Tarjetas resumen (reportes totales, provincia, tendencia...) */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 4px 16px 16px;
+}
+
+.stat-tile {
+  background: var(--gray-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.stat-tile-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.stat-tile-value {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* Galería de fotos de la comunidad */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 16px 18px;
+}
+
+.gallery-tile {
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  background-color: var(--gray-bg);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--border);
+}
+
 /* Barras de "contaminantes más comunes" */
 .stat-bar-row {
   margin-bottom: 11px;

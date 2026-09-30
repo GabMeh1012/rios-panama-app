@@ -1,17 +1,23 @@
 import { useState } from "react";
 
 export default function LoginScreen({ onBack, onLogin }) {
+  const [modo, setModo] = useState("login"); // "login" | "registro"
+  const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
 
   function handleSubmit() {
+    if (modo === "registro" && !nombre.trim()) {
+      setError("Ingresa tu nombre completo.");
+      return;
+    }
     if (!correo.trim() || !clave.trim()) {
       setError("Ingresa tu correo y contraseña.");
       return;
     }
     setError("");
-    onLogin({ nombre: correo.split("@")[0] });
+    onLogin({ nombre: modo === "registro" ? nombre.trim() : correo.split("@")[0] });
   }
 
   return (
@@ -46,6 +52,43 @@ export default function LoginScreen({ onBack, onLogin }) {
       </div>
 
       <div className="form-section" style={{ paddingTop: 10 }}>
+        <div className="brand-tabs" style={{ margin: "0 0 16px" }}>
+          <button
+            type="button"
+            className={`brand-tab ${modo === "login" ? "active" : ""}`}
+            style={{ flex: 1, textAlign: "center" }}
+            onClick={() => {
+              setModo("login");
+              setError("");
+            }}
+          >
+            Iniciar sesión
+          </button>
+          <button
+            type="button"
+            className={`brand-tab ${modo === "registro" ? "active" : ""}`}
+            style={{ flex: 1, textAlign: "center" }}
+            onClick={() => {
+              setModo("registro");
+              setError("");
+            }}
+          >
+            Crear cuenta
+          </button>
+        </div>
+
+        {modo === "registro" && (
+          <>
+            <label className="field-label">Nombre completo</label>
+            <input
+              className="field"
+              placeholder="Tu nombre y apellido"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+            />
+          </>
+        )}
+
         <label className="field-label">Correo electrónico</label>
         <input
           className="field"
@@ -63,10 +106,10 @@ export default function LoginScreen({ onBack, onLogin }) {
         />
         {error && <p className="error-text">{error}</p>}
         <button className="submit-btn" onClick={handleSubmit}>
-          Iniciar sesión
+          {modo === "registro" ? "Crear cuenta" : "Iniciar sesión"}
         </button>
         <div style={{ textAlign: "center", fontSize: 11, color: "var(--text-secondary)", margin: "14px 0" }}>
-          Este login es una simulación para el prototipo — cualquier correo y contraseña funcionan.
+          Este {modo === "registro" ? "registro" : "login"} es una simulación para el prototipo — cualquier correo y contraseña funcionan.
         </div>
         <div style={{ textAlign: "center", fontSize: 12, color: "var(--teal)", fontWeight: 600, marginTop: 4 }}>
           <span onClick={onBack} style={{ cursor: "pointer" }}>
