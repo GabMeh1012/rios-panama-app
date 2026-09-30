@@ -21,7 +21,7 @@ export const seedReports = [
     provincia: "Panamá Este",
     lat: 9.087,
     lng: -79.271,
-    tipo: "Basura / plásticos",
+    tipo: "Basura doméstica",
     severidad: "moderado",
     descripcion: "Basura acumulada en la orilla, cerca del puente principal.",
     fecha: "2026-08-05",
@@ -47,7 +47,7 @@ export const seedReports = [
     provincia: "Panamá Este",
     lat: 9.088,
     lng: -79.27,
-    tipo: "Contaminación industrial",
+    tipo: "Aceites e hidrocarburos",
     severidad: "leve",
     descripcion: "Ligera capa de aceite visible tras la lluvia.",
     fecha: "2026-06-18",
@@ -67,6 +67,7 @@ export const seedReports = [
     fecha: "2026-06-01",
     confirmaciones: 12,
     estado: "atendido",
+    marcas: ["Ingenio azucarero local"],
   },
   {
     id: "r3",
@@ -74,13 +75,14 @@ export const seedReports = [
     provincia: "Ciudad de Panamá",
     lat: 9.0295,
     lng: -79.4685,
-    tipo: "Basura / plásticos",
+    tipo: "Plásticos de un solo uso",
     severidad: "moderado",
     descripcion:
       "Acumulación de desechos sólidos flotantes en el cauce urbano, cerca de la desembocadura.",
     fecha: "2026-08-10",
     confirmaciones: 4,
     estado: "nuevo",
+    marcas: ["Coca-Cola", "Cervecería Nacional"],
   },
   {
     id: "r4",
@@ -97,27 +99,75 @@ export const seedReports = [
   },
 ];
 
+// Categorías de tipo de contaminación (con ícono, ver TipoIcon.jsx) que se
+// usan tanto en el formulario de reporte como en los filtros del mapa.
 export const tiposContaminacion = [
-  "Aguas negras",
-  "Basura / plásticos",
-  "Botellas plásticas",
-  "Papel",
-  "Aceites",
-  "Pintura / químicos",
-  "Contaminación industrial",
-  "Otro",
+  { id: "neg", label: "Aguas negras" },
+  { id: "ind", label: "Contaminación industrial" },
+  { id: "bas", label: "Basura doméstica" },
+  { id: "pla", label: "Plásticos de un solo uso" },
+  { id: "sed", label: "Sedimentos / tierra removida" },
+  { id: "agro", label: "Químicos agrícolas" },
+  { id: "ace", label: "Aceites e hidrocarburos" },
+  { id: "esc", label: "Escombros de construcción" },
+  { id: "olo", label: "Mal olor" },
+  { id: "fau", label: "Fauna muerta" },
+  { id: "otr", label: "Otro" },
+];
+
+// Marcas observadas, agrupadas por categoría de industria. Son las marcas que,
+// según auditorías de basura ciudadana (brand audits) y prensa local, aparecen
+// con más frecuencia en ríos y cauces de Panamá. El formulario permite elegir
+// varias, y "Otra marca" cubre cualquiera que no esté en la lista.
+export const marcasCategorias = [
+  {
+    id: "plast",
+    label: "Residuos plásticos",
+    hint: "Envases y empaques plásticos identificados en el río.",
+    brands: ["Coca-Cola", "Pepsi", "Nestlé", "Unilever", "Cervecería Nacional", "Grupo Rey"],
+  },
+  {
+    id: "textil",
+    label: "Textil y moda",
+    hint: "Restos textiles, tintes o químicos de la industria de la moda.",
+    brands: ["Zara (Inditex)", "H&M", "Nike", "Adidas", "Gildan"],
+  },
+  {
+    id: "electro",
+    label: "Electrónica",
+    hint: "Baterías, cables o componentes electrónicos desechados.",
+    brands: ["Samsung", "LG", "Sony", "Duracell", "Energizer"],
+  },
+  {
+    id: "mineria",
+    label: "Minería y petróleo",
+    hint: "Sedimentos, derrames o residuos de actividad extractiva.",
+    brands: ["Minera Panamá", "Petroterminal de Panamá", "Chevron", "Shell", "Esso"],
+  },
+  {
+    id: "alimentos",
+    label: "Alimentos y bebidas",
+    hint: "Empaques y residuos de productos alimenticios.",
+    brands: ["Nestlé", "Café Durán", "Ricomini", "Cervecería Nacional", "Grupo Rey"],
+  },
+  {
+    id: "higiene",
+    label: "Higiene y cuidado personal",
+    hint: "Envases de productos de limpieza e higiene.",
+    brands: ["Colgate-Palmolive", "Unilever", "Kimberly-Clark", "Johnson & Johnson"],
+  },
 ];
 
 export const noticias = [
   {
     titulo: "Crisis de agua en La Villa y Estibaná",
     fuente: "TVN Noticias",
-    color: "#FAEEDA",
+    color: "#2f6fa5",
   },
   {
     titulo: "Contaminación del Pacora arriesga a 400 mil personas",
     fuente: "EcoTV Panamá",
-    color: "#FCEBEB",
+    color: "#d64545",
   },
 ];
 
@@ -126,13 +176,22 @@ export const comentariosSemilla = [
   { iniciales: "JR", nombre: "Julio R.", texto: "Reporté cerca de Juan Díaz, ya bajó un poco la basura visible.", tiempo: "hace 1d" },
 ];
 
-// Ríos conocidos (derivados de los reportes semilla) para ubicar automáticamente
-// el punto marcado en el mapa, ya que el usuario ya no escribe el nombre a mano.
+// Ríos conocidos (derivados de los reportes semilla, más algunos de los ríos
+// principales del país) para ubicar automáticamente el punto marcado en el
+// mapa, ya que el usuario ya no escribe el nombre a mano.
+// NOTA: esta lista cubre los ríos más conocidos/reportados, no la red hídrica
+// completa de Panamá (ver README, sección "¿Existe un mapa con todos los ríos?").
 export const riosConocidos = [
   { rio: "Río Pacora", provincia: "Panamá Este", lat: 9.0865, lng: -79.2725 },
   { rio: "Río La Villa", provincia: "Azuero (Herrera/Los Santos)", lat: 7.7333, lng: -80.55 },
   { rio: "Río Juan Díaz", provincia: "Ciudad de Panamá", lat: 9.0295, lng: -79.4685 },
   { rio: "Río Matasnillo", provincia: "Ciudad de Panamá", lat: 8.9824, lng: -79.5199 },
+  { rio: "Río Chagres", provincia: "Colón", lat: 9.22, lng: -79.85 },
+  { rio: "Río Tuira", provincia: "Darién", lat: 8.05, lng: -77.7 },
+  { rio: "Río Bayano", provincia: "Panamá Este", lat: 9.1, lng: -78.9 },
+  { rio: "Río Santa María", provincia: "Coclé", lat: 8.4, lng: -80.5 },
+  { rio: "Río Chiriquí Viejo", provincia: "Chiriquí", lat: 8.55, lng: -82.75 },
+  { rio: "Río Changuinola", provincia: "Bocas del Toro", lat: 9.35, lng: -82.45 },
 ];
 
 // Distancia aproximada en grados (suficiente para un prototipo, no usa fórmulas geodésicas).

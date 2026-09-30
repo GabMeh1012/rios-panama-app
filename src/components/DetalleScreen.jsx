@@ -1,16 +1,47 @@
+import { MapContainer, TileLayer, CircleMarker, Tooltip } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+
 const labelSeveridad = { critico: "Crítico", moderado: "Moderado", leve: "Leve" };
+const colorPorSeveridad = { critico: "#d64545", moderado: "#e0a52c", leve: "#2f9e63" };
 const nombresMes = {
   "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May", "06": "Jun",
   "07": "Jul", "08": "Ago", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic",
 };
 
-export default function DetalleScreen({ report, focoCritico, tendencia, onEscalar }) {
+export default function DetalleScreen({ report, reports, focoCritico, tendencia, onEscalar }) {
   const maxTotal = Math.max(1, ...tendencia.map((t) => t.total));
   const yaEscalado = report.estado === "enviado a autoridad";
 
+  // Todos los reportes de este mismo río (cada uno puede ser un tramo distinto).
+  const delMismoRio = reports.filter((r) => r.rio === report.rio);
+
+  // Contaminantes más comunes reportados en este río, calculado a partir de
+  // los datos reales de los reportes (no son cifras inventadas).
+  const conteoTipos = {};
+  delMismoRio.forEach((r) => {
+    const lista = r.tipos && r.tipos.length ? r.tipos : [r.tipo];
+    lista.forEach((t) => {
+      conteoTipos[t] = (conteoTipos[t] || 0) + 1;
+    });
+  });
+  const totalTipos = Object.values(conteoTipos).reduce((a, b) => a + b, 0) || 1;
+  const tiposOrdenados = Object.entries(conteoTipos).sort(([, a], [, b]) => b - a);
+
+  // Marcas observadas en todos los reportes de este río.
+  const conteoMarcas = {};
+  delMismoRio.forEach((r) => {
+    (r.marcas || []).forEach((m) => {
+      conteoMarcas[m] = (conteoMarcas[m] || 0) + 1;
+    });
+  });
+  const marcasOrdenadas = Object.entries(conteoMarcas).sort(([, a], [, b]) => b - a);
+
   return (
     <div className="screen">
-      <div className="detail-photo" />
+      <div
+        className="detail-photo"
+        style={report.foto ? { backgroundImage: `url(${report.foto})` } : undefined}
+      />
       <div className="detail-body">
         <div className="detail-header">
           <span className="card-title" style={{ fontSize: 16 }}>
@@ -26,23 +57,52 @@ export default function DetalleScreen({ report, focoCritico, tendencia, onEscala
 
         <div className="detail-row">👥 {report.confirmaciones} vecinos confirmaron</div>
         <div className="detail-row">🧪 Tipo: {report.tipos ? report.tipos.join(", ") : report.tipo}</div>
-        {report.marca && <div className="detail-row">🏷️ Marca visible: {report.marca}</div>}
+        {report.marcas && report.marcas.length > 0 && (
+          <div className="detail-row">🏷️ Marcas visibles: {report.marcas.join(", ")}</div>
+        )}
         <div className="detail-row">
           📍 {report.lat.toFixed(4)}, {report.lng.toFixed(4)}
         </div>
+      </div>
 
-        {tendencia.length > 1 && (
-          <div style={{ margin: "14px 0" }}>
-            <p style={{ fontSize: 12, fontWeight: 500, margin: "0 0 8px" }}>
-              Tendencia de reportes por mes
-            </p>
+      {tiposOrdenados.length > 0 && (
+        <>
+          <div className="section-title">Contaminantes más comunes</div>
+          <div style={{ margin: "0 16px 6px" }}>
+            {tiposOrdenados.map(([tipo, cant]) => {
+              const pct = Math.round((cant / totalTipos) * 100);
+              return (
+                <div className="stat-bar-row" key={tipo}>
+                  <div className="stat-bar-label">
+                    <span>{tipo}</span>
+                    <b>{pct}%</b>
+                  </div>
+                  <div className="stat-bar-track">
+                    <div className="stat-bar-fill" style={{ width: `${pct}%`, background: "var(--teal)" }} />
+                  </div>
+                </div>
+              );
+            })}
+            {marcasOrdenadas.length > 0 && (
+              <p style={{ fontSize: 11.5, color: "var(--text-secondary)", margin: "10px 0 16px" }}>
+                Marcas más reportadas en este río: {marcasOrdenadas.map(([m]) => m).join(", ")}.
+              </p>
+            )}
+          </div>
+        </>
+      )}
+
+      {tendencia.length > 1 && (
+        <>
+          <div className="section-title">Tendencia de reportes por mes</div>
+          <div style={{ margin: "0 16px 18px" }}>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 70 }}>
               {tendencia.map((t) => (
                 <div key={t.mes} style={{ textAlign: "center", flex: 1 }}>
                   <div
                     style={{
                       height: `${(t.total / maxTotal) * 50 + 6}px`,
-                      background: "var(--navy)",
+                      background: "linear-gradient(180deg, var(--teal), var(--navy))",
                       borderRadius: 4,
                       marginBottom: 4,
                     }}
@@ -55,8 +115,46 @@ export default function DetalleScreen({ report, focoCritico, tendencia, onEscala
               ))}
             </div>
           </div>
-        )}
+        </>
+      )}
 
+      <div className="section-title">Información adicional</div>
+      <dl className="info-card">
+        <dt>Reportes registrados en este río</dt>
+        <dd>{delMismoRio.length}</dd>
+        <dt>Provincia</dt>
+        <dd>{report.provincia}</dd>
+        <dt>Reporte más reciente</dt>
+        <dd>{delMismoRio.reduce((max, r) => (r.fecha > max ? r.fecha : max), delMismoRio[0].fecha)}</dd>
+      </dl>
+
+      {delMismoRio.length > 1 && (
+        <>
+          <div className="section-title">Reportes a lo largo del río</div>
+          <div style={{ margin: "0 16px 18px", borderRadius: 12, overflow: "hidden", height: 150 }}>
+            <MapContainer
+              center={[report.lat, report.lng]}
+              zoom={12}
+              style={{ height: "100%", width: "100%" }}
+              scrollWheelZoom={false}
+            >
+              <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {delMismoRio.map((r) => (
+                <CircleMarker
+                  key={r.id}
+                  center={[r.lat, r.lng]}
+                  radius={7}
+                  pathOptions={{ color: colorPorSeveridad[r.severidad], fillOpacity: 0.85, weight: 2 }}
+                >
+                  <Tooltip>{labelSeveridad[r.severidad]} · {r.tipo}</Tooltip>
+                </CircleMarker>
+              ))}
+            </MapContainer>
+          </div>
+        </>
+      )}
+
+      <div className="detail-body" style={{ paddingTop: 0 }}>
         {focoCritico && (
           <div className="alert-box">⚠️ Alerta de foco crítico: múltiples reportes en este río</div>
         )}

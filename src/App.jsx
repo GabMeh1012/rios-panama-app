@@ -49,7 +49,11 @@ export default function App() {
     <div className="phone">
       <div className="topbar">
         {pantalla !== "mapa" && <button onClick={() => setPantalla("mapa")}>←</button>}
-        <span>{titulos[pantalla]}</span>
+        {pantalla === "mapa" ? (
+          <span className="logo-type">{titulos[pantalla]}</span>
+        ) : (
+          <span>{titulos[pantalla]}</span>
+        )}
       </div>
 
       {!online && (
@@ -78,6 +82,7 @@ export default function App() {
       {pantalla === "detalle" && seleccionado && (
         <DetalleScreen
           report={seleccionado}
+          reports={reports}
           focoCritico={tieneFocoCritico(seleccionado.rio)}
           tendencia={tendenciaPorMes(seleccionado.rio)}
           onEscalar={handleEscalar}

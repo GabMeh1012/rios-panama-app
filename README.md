@@ -67,9 +67,48 @@ localStorage por Firebase:
    - uploadBytes de Firebase Storage para subir la foto antes de guardar el
      reporte
 
+## ¿Existe un mapa con todos los ríos de Panamá?
+
+Sí, hay un par de fuentes reales, pero ninguna es un "botón mágico" que ya
+venga cargado en Leaflet:
+
+- **OpenStreetMap / Overpass API** — tiene mapeados la mayoría de los ríos y
+  quebradas de Panamá (los que la comunidad de OSM ha trazado). Es gratis y
+  se puede consultar en vivo desde el navegador del usuario (no necesita API
+  key), pero para traer "todos los ríos" de una vez hay que hacer una
+  consulta Overpass por bounding box y luego dibujar el resultado como
+  polilíneas en Leaflet. Es la opción más viable para ampliar esto a futuro.
+- **HydroRIVERS / HydroSHEDS (WWF)** — el dataset hidrográfico más completo
+  a nivel mundial, incluye Panamá, pero viene en shapefile/GeoPackage y hay
+  que descargarlo, recortarlo al país y convertirlo a GeoJSON con QGIS o
+  `ogr2ogr` antes de poder usarlo en la web.
+- **ANAM / Instituto Geográfico Nacional Tommy Guardia (IGNTG)** — la fuente
+  oficial de cuencas hidrográficas de Panamá, pero se distribuye como capas
+  de su Geoportal, no como una API lista para consumir desde una app.
+
+Para este prototipo, **no** se cargó la red hídrica completa del país (son
+miles de quebradas y sería mucho peso para una app móvil de clase). En su
+lugar:
+
+- `src/data/seedReports.js` tiene una lista ampliada de los ríos más
+  conocidos/reportados (`riosConocidos`), usada para autodetectar el nombre
+  del río según la ubicación GPS del usuario.
+- `src/data/panamaZonas.js` tiene un rectángulo aproximado por provincia
+  (**no son límites administrativos oficiales**, son solo una referencia
+  visual) que se dibuja sobre el mapa cuando se toca un filtro de "Zona", así
+  el mapa "marca" la zona igual que en el wireframe.
+
+Si más adelante quieres el mapa completo de ríos, lo más práctico es agregar
+una consulta a Overpass API (`waterway=river` dentro del bounding box de
+Panamá) y dibujar el `GeoJSON` resultante con el componente `<GeoJSON>` de
+react-leaflet.
+
 ## Notas
 
 - El mapa usa Leaflet con tiles de OpenStreetMap (gratis, sin API key).
   Si prefieres Google Maps, la librería @react-google-maps/api es el
   equivalente, pero requiere una API key de Google Cloud.
 - Todo el código está comentado en español pensando en que lo sustentes en clase.
+- La paleta, tipografías (Fraunces + Figtree) e íconos siguen el wireframe de
+  diseño de Ríos PTY (azul-verde, tarjetas con ícono, marcas observadas por
+  categoría).
