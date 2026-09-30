@@ -82,18 +82,25 @@ export function useReports() {
     persistReports(next);
   }
 
-  // Agrupa los reportes de un río por mes, para la tendencia histórica.
-  function tendenciaPorMes(rio) {
-    const conteos = {};
-    reports
-      .filter((r) => r.rio === rio)
-      .forEach((r) => {
-        const mes = r.fecha.slice(0, 7); // "2026-08"
-        conteos[mes] = (conteos[mes] || 0) + 1;
-      });
-    return Object.entries(conteos)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([mes, total]) => ({ mes, total }));
+  // Agrupa los reportes de un río en 6 bloques de 5 días (30 días en total),
+  // para graficar la tendencia reciente. Se calcula con la fecha real del
+  // dispositivo, no con datos inventados.
+  function tendenciaUltimos30Dias(rio) {
+    const hoy = new Date();
+    const bloques = [];
+    for (let i = 5; i >= 0; i--) {
+      const fin = new Date(hoy);
+      fin.setDate(hoy.getDate() - i * 5);
+      const inicio = new Date(fin);
+      inicio.setDate(fin.getDate() - 4);
+      const inicioStr = inicio.toISOString().slice(0, 10);
+      const finStr = fin.toISOString().slice(0, 10);
+      const total = reports.filter(
+        (r) => r.rio === rio && r.fecha >= inicioStr && r.fecha <= finStr
+      ).length;
+      bloques.push({ inicio: inicioStr, fin: finStr, total });
+    }
+    return bloques;
   }
 
   return {
@@ -103,6 +110,6 @@ export function useReports() {
     addReport,
     tieneFocoCritico,
     escalarReporte,
-    tendenciaPorMes,
+    tendenciaUltimos30Dias,
   };
 }
