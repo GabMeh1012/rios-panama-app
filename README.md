@@ -103,6 +103,23 @@ una consulta a Overpass API (`waterway=river` dentro del bounding box de
 Panamá) y dibujar el `GeoJSON` resultante con el componente `<GeoJSON>` de
 react-leaflet.
 
+## Datos de ejemplo
+
+- El río Pacora tiene más reportes de ejemplo (`src/data/seedReports.js`) que
+  los demás a propósito, distribuidos en los últimos 30 días, para poder
+  mostrar completa la pantalla de detalle (tendencia, contaminantes más
+  comunes, historial) con datos reales calculados de verdad — no cifras
+  inventadas puestas a mano.
+- `src/data/riosInfo.js` tiene la "información general" de cada río (cuenca,
+  longitud aproximada, uso principal, última inspección oficial). Esto es
+  investigación propia para el prototipo, no una API oficial en tiempo real,
+  así que son aproximados. Si un río no está en esa lista, la pantalla de
+  detalle lo dice honestamente en vez de inventar los datos.
+- El "corregimiento" de cada río (`riosConocidos` en `seedReports.js`) es una
+  referencia aproximada al corregimiento más cercano, no un límite
+  administrativo oficial verificado — igual que las zonas del mapa
+  (`panamaZonas.js`).
+
 ## Notas
 
 - El mapa usa Leaflet con tiles de OpenStreetMap (gratis, sin API key).

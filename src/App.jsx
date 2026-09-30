@@ -7,7 +7,7 @@ import DetalleScreen from "./components/DetalleScreen";
 import LoginScreen from "./components/LoginScreen";
 
 export default function App() {
-  const { reports, pendientes, online, addReport, tieneFocoCritico, escalarReporte, tendenciaPorMes } =
+  const { reports, pendientes, online, addReport, tieneFocoCritico, escalarReporte, tendenciaUltimos30Dias } =
     useReports();
   const [pantalla, setPantalla] = useState("mapa"); // "mapa" | "nuevo" | "detalle" | "login"
   const [seleccionado, setSeleccionado] = useState(null);
@@ -110,7 +110,7 @@ export default function App() {
           report={seleccionado}
           reports={reports}
           focoCritico={tieneFocoCritico(seleccionado.rio)}
-          tendencia={tendenciaPorMes(seleccionado.rio)}
+          tendencia={tendenciaUltimos30Dias(seleccionado.rio)}
           onEscalar={handleEscalar}
         />
       )}

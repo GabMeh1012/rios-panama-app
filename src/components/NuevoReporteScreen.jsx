@@ -47,6 +47,8 @@ export default function NuevoReporteScreen({ onBack, onGuardar }) {
     setNombreDetectado(rio === "Punto sin identificar" ? null : rio);
   }
 
+
+
   function pedirUbicacion() {
     setBuscandoGps(true);
     if (!navigator.geolocation) {
@@ -92,11 +94,12 @@ export default function NuevoReporteScreen({ onBack, onGuardar }) {
     if (!coords) return setError("Marca la ubicación en el mapa (o toca la foto para detectarla).");
     if (tiposSeleccionados.length === 0) return setError("Elige al menos un tipo de contaminación.");
     setError("");
-    const { rio, provincia } = identificarRio(coords.lat, coords.lng);
+    const { rio, provincia, corregimiento } = identificarRio(coords.lat, coords.lng);
     const marcas = [...marcasElegidas, ...(otraMarca.trim() ? [otraMarca.trim()] : [])];
     onGuardar({
       rio,
       provincia,
+      corregimiento,
       lat: coords.lat,
       lng: coords.lng,
       tipos: tiposSeleccionados,
