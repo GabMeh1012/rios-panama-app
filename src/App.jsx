@@ -42,7 +42,9 @@ export default function App() {
   }
 
   function guardarReporte(datos) {
-    const nuevo = addReport(datos);
+    // Se etiqueta con el autor real (el usuario que inició sesión), para
+    // poder mostrar "Mis reportes" en el perfil con datos reales.
+    const nuevo = addReport({ ...datos, autor: usuario ? usuario.nombre : null });
     if (nuevo.sinConexion) {
       setPantalla("mapa");
     } else {
@@ -159,7 +161,13 @@ export default function App() {
       )}
 
       {pantalla === "perfil" && (
-        <PerfilScreen usuario={usuario} onLogout={handleLogout} onIrLogin={irLogin} />
+        <PerfilScreen
+          usuario={usuario}
+          reports={reports}
+          onVerReporte={verDetalle}
+          onLogout={handleLogout}
+          onIrLogin={irLogin}
+        />
       )}
 
       {pantalla === "login" && (
