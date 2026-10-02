@@ -75,6 +75,7 @@ body {
 .screen {
   flex: 1;
   overflow-y: auto;
+  padding-bottom: 14px;
 }
 
 /* Encabezado moderno de las pantallas con barra inferior (Inicio/Mapa/
@@ -366,8 +367,8 @@ body {
 
 .fab {
   position: sticky;
-  bottom: 16px;
-  margin: 0 16px;
+  bottom: 20px;
+  margin: 20px 16px 0;
   display: flex;
   align-items: center;
   justify-content: center;
