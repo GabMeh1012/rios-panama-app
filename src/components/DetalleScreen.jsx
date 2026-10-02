@@ -54,7 +54,85 @@ const COLOR_TENDENCIA_ACTUAL = "#184f95";
 // Para mostrar el ícono de cada tipo de contaminación a partir de su nombre.
 const idPorTipo = Object.fromEntries(tiposContaminacion.map((t) => [t.label, t.id]));
 
-export default function DetalleScreen({ report, reports, focoCritico, tendencia, onEscalar, confirmado, onConfirmar }) {
+// Ficha de un río que todavía no tiene reportes (se abre desde la pestaña
+// "Ríos"): muestra su cauce y su información general, e invita a reportar.
+function FichaSinReportes({ rio, onNuevoReporte }) {
+  const tema = temaDelRio(rio.rio);
+  const infoGeneral = getInfoGeneral(rio);
+  const trazo = riosTrazos[rio.rio];
+
+  return (
+    <div className="screen">
+      <div className="detail-hero" style={{ background: `linear-gradient(135deg, ${tema.deep}, ${tema.mid} 75%)` }}>
+        <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" className="detail-hero-waves" aria-hidden="true">
+          <path d="M0 120Q100 90 200 115T400 100V200H0Z" fill="#fff" opacity="0.08" />
+          <path d="M0 150Q100 125 200 145T400 130V200H0Z" fill="#fff" opacity="0.1" />
+          <path d="M0 176Q100 156 200 171T400 160V200H0Z" fill="#fff" opacity="0.14" />
+        </svg>
+        <div className="detail-hero-scrim" />
+        <div className="detail-hero-text">
+          <span className="logo-type detail-hero-title">{rio.rio}</span>
+          <div className="detail-hero-tags">
+            <span className="detail-hero-tipo">Sin reportes</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="detail-body">
+        <p className="detail-meta" style={{ marginTop: 0 }}>{rio.provincia}</p>
+        <div className="detail-desc">
+          Aún no hay reportes de la comunidad para este río. Si ves contaminación en alguno de sus tramos, sé el
+          primero en reportarla.
+        </div>
+        <button className="submit-btn" onClick={onNuevoReporte}>Reportar este río</button>
+      </div>
+
+      <div className="section-title">Información adicional</div>
+      {infoGeneral && !infoGeneral.porUbicacion ? (
+        <div className="info-card">
+          <dl style={{ margin: 0 }}>
+            <dt>Cuenca hidrográfica</dt>
+            <dd>{infoGeneral.cuenca}</dd>
+            <dt>Superficie de la cuenca</dt>
+            <dd>{infoGeneral.superficie}</dd>
+            <dt>Longitud del río principal</dt>
+            <dd>{infoGeneral.longitud}</dd>
+            <dt>Vertiente</dt>
+            <dd>{infoGeneral.vertiente}</dd>
+            <dt>Uso principal</dt>
+            <dd>{infoGeneral.usoPrincipal}</dd>
+          </dl>
+          <p style={{ fontSize: 10.5, color: "var(--text-secondary)", margin: "10px 0 0" }}>
+            Fuente: {FUENTE_INFO_GENERAL}.
+          </p>
+        </div>
+      ) : (
+        <p style={{ margin: "0 16px 18px", fontSize: 12, color: "var(--text-secondary)" }}>
+          Aún no tenemos información general verificada para este río.
+        </p>
+      )}
+
+      <div className="section-title">Ubicación del río</div>
+      <div className="info-card" style={{ padding: 10 }}>
+        <div style={{ borderRadius: 10, overflow: "hidden", height: 170 }}>
+          <MapContainer center={[rio.lat, rio.lng]} zoom={10} style={{ height: "100%", width: "100%" }} scrollWheelZoom={false}>
+            <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            {trazo && <Polyline positions={trazo} pathOptions={{ color: COLOR_RIO, weight: 4, opacity: 0.85 }} />}
+          </MapContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function DetalleScreen(props) {
+  if (props.report.sinReportes) {
+    return <FichaSinReportes rio={props.report} onNuevoReporte={props.onNuevoReporte} />;
+  }
+  return <DetalleConReportes {...props} />;
+}
+
+function DetalleConReportes({ report, reports, focoCritico, tendencia, onEscalar, confirmado, onConfirmar }) {
   const yaEscalado = report.estado === "enviado a autoridad";
   const tema = temaDelRio(report.rio);
   const [copiado, setCopiado] = useState(false);

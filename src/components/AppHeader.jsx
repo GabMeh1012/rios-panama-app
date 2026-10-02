@@ -48,6 +48,7 @@ export default function AppHeader({
         <div className="dropdown-menu">
           <div className="dropdown-item" onClick={() => onIrTab("inicio")}>Inicio</div>
           <div className="dropdown-item" onClick={() => onIrTab("mapa")}>Mapa</div>
+          <div className="dropdown-item" onClick={() => onIrTab("rios")}>Ríos</div>
           <div className="dropdown-item" onClick={() => onIrTab("comunidad")}>Comunidad</div>
           <div className="dropdown-item" onClick={() => onIrTab("perfil")}>Perfil</div>
           <div className="dropdown-item" onClick={usuario ? onLogout : onIrLogin}>

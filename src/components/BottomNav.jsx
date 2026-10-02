@@ -1,6 +1,7 @@
 const tabs = [
   { id: "inicio", label: "Inicio" },
   { id: "mapa", label: "Mapa" },
+  { id: "rios", label: "Ríos" },
   { id: "comunidad", label: "Comunidad" },
   { id: "perfil", label: "Perfil" },
 ];
@@ -20,6 +21,15 @@ function Icono({ id }) {
       <svg {...props}>
         <path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z" />
         <circle cx="12" cy="9.5" r="2.4" />
+      </svg>
+    );
+  }
+  if (id === "rios") {
+    return (
+      <svg {...props}>
+        <path d="M2 8c2.5-2 4.5-2 7 0s4.5 2 7 0 4-2 6-.5" />
+        <path d="M2 13c2.5-2 4.5-2 7 0s4.5 2 7 0 4-2 6-.5" />
+        <path d="M2 18c2.5-2 4.5-2 7 0s4.5 2 7 0 4-2 6-.5" />
       </svg>
     );
   }

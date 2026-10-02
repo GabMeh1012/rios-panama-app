@@ -506,6 +506,75 @@ body {
   background: var(--teal-bg);
 }
 
+/* Directorio de ríos (pestaña "Ríos") */
+.rio-card {
+  display: block;
+  width: calc(100% - 28px);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 11px 14px 11px 12px;
+  margin: 0 14px 10px;
+  box-shadow: 0 2px 8px rgba(10, 61, 71, 0.06);
+  cursor: pointer;
+}
+
+.rio-card:hover {
+  background: var(--gray-bg);
+}
+
+.rio-card.critico {
+  border-left-color: var(--critico);
+}
+
+.rio-card.con {
+  border-left-color: var(--sky);
+}
+
+.rio-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rio-estado {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--gray-bg);
+  color: var(--text-secondary);
+}
+
+.rio-estado.critico {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.rio-estado.con {
+  background: #e3eef8;
+  color: #1f5687;
+}
+
+.rio-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.rio-card-stats b {
+  color: var(--navy);
+}
+
 /* Chips de filtro (zona / tipo de problema) */
 .chip-row {
   display: flex;

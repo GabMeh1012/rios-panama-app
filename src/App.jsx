@@ -6,13 +6,14 @@ import NuevoReporteScreen from "./components/NuevoReporteScreen";
 import DetalleScreen from "./components/DetalleScreen";
 import LoginScreen from "./components/LoginScreen";
 import PerfilScreen from "./components/PerfilScreen";
+import RiosScreen from "./components/RiosScreen";
 import AppHeader from "./components/AppHeader";
 import BottomNav from "./components/BottomNav";
 
 // Pantallas que tienen su propia barra superior/inferior tipo "tab bar"
 // (Inicio, Mapa, Comunidad y Perfil comparten la misma pantalla de mapa por
 // ahora, salvo Perfil que es su propia vista).
-const PANTALLAS_CON_NAV = ["mapa", "perfil"];
+const PANTALLAS_CON_NAV = ["mapa", "rios", "perfil"];
 
 export default function App() {
   const {
@@ -26,8 +27,9 @@ export default function App() {
     alternarConfirmacion,
     tendenciaUltimos30Dias,
   } = useReports();
-  const [pantalla, setPantalla] = useState("mapa"); // "mapa" | "nuevo" | "detalle" | "login" | "perfil"
+  const [pantalla, setPantalla] = useState("mapa"); // "mapa" | "rios" | "nuevo" | "detalle" | "login" | "perfil"
   const [seleccionado, setSeleccionado] = useState(null);
+  const [volverA, setVolverA] = useState("mapa"); // pantalla a la que regresa la flecha del detalle
   const [usuario, setUsuario] = useState(null);
   const [comentarios, setComentarios] = useState(comentariosSemilla);
   const [destinoPendiente, setDestinoPendiente] = useState(null); // a dónde ir después de iniciar sesión
@@ -41,7 +43,26 @@ export default function App() {
 
   function verDetalle(report) {
     setSeleccionado(report);
+    setVolverA(PANTALLAS_CON_NAV.includes(pantalla) ? pantalla : "mapa");
     setPantalla("detalle");
+  }
+
+  // Abre la ficha de un río desde el directorio "Ríos": usa su reporte más
+  // reciente, o una ficha sin reportes si todavía nadie lo ha reportado.
+  function verRio(rio) {
+    const masReciente = reports
+      .filter((r) => r.rio === rio.rio)
+      .sort((a, b) => b.fecha.localeCompare(a.fecha))[0];
+    verDetalle(
+      masReciente || {
+        sinReportes: true,
+        rio: rio.rio,
+        provincia: rio.provincia,
+        corregimiento: rio.corregimiento,
+        lat: rio.lat,
+        lng: rio.lng,
+      }
+    );
   }
 
   function guardarReporte(datos) {
@@ -87,6 +108,10 @@ export default function App() {
   function irTab(tab) {
     setMenuAbierto(false);
     setAlertasAbiertas(false);
+    if (tab === "rios") {
+      setPantalla("rios");
+      return;
+    }
     if (tab === "perfil") {
       if (!usuario) {
         setDestinoPendiente("perfil");
@@ -122,7 +147,11 @@ export default function App() {
     setComentarios([{ iniciales, nombre: usuario.nombre, texto, tiempo: "ahora" }, ...comentarios]);
   }
 
-  const titulos = { nuevo: "Nuevo reporte", detalle: "Detalle del reporte", login: "Iniciar sesión" };
+  const titulos = {
+    nuevo: "Nuevo reporte",
+    detalle: seleccionado?.sinReportes ? "Ficha del río" : "Detalle del reporte",
+    login: "Iniciar sesión",
+  };
   const mostrarNav = PANTALLAS_CON_NAV.includes(pantalla);
 
   return (
@@ -147,7 +176,7 @@ export default function App() {
         />
       ) : (
         <div className="topbar">
-          <button onClick={() => setPantalla("mapa")}>←</button>
+          <button onClick={() => setPantalla(pantalla === "detalle" ? volverA : "mapa")}>←</button>
           <span>{titulos[pantalla]}</span>
         </div>
       )}
@@ -170,6 +199,8 @@ export default function App() {
           onComentar={agregarComentario}
         />
       )}
+
+      {pantalla === "rios" && <RiosScreen reports={reports} onVerRio={verRio} />}
 
       {pantalla === "perfil" && (
         <PerfilScreen
@@ -204,11 +235,12 @@ export default function App() {
           onEscalar={handleEscalar}
           confirmado={confirmados.includes(seleccionado.id)}
           onConfirmar={handleConfirmar}
+          onNuevoReporte={irNuevoReporte}
         />
       )}
 
       {mostrarNav && (
-        <BottomNav activo={pantalla === "perfil" ? "perfil" : vista} onSelect={irTab} />
+        <BottomNav activo={pantalla === "mapa" ? vista : pantalla} onSelect={irTab} />
       )}
     </div>
   );

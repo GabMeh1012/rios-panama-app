@@ -19,7 +19,7 @@ if (localStorage.getItem(VERSION_KEY) !== String(VERSION_DATOS)) {
 
 // Un reporte cuenta para la alerta de foco crítico si sigue abierto (no ha
 // sido atendido) y es de los últimos 30 días.
-function esReporteActivo(r) {
+export function esReporteActivo(r) {
   const limite = new Date();
   limite.setDate(limite.getDate() - 30);
   return r.estado !== "atendido" && r.fecha >= limite.toISOString().slice(0, 10);
