@@ -1,8 +1,40 @@
 import { useEffect, useState } from "react";
 import { seedReports } from "./seedReports";
+import { VERSION_DATOS } from "./generarReportes";
 
 const STORAGE_KEY = "rios_panama_reports";
 const PENDING_KEY = "rios_panama_pendientes"; // reportes creados sin conexión
+const CONFIRM_KEY = "rios_panama_confirmados"; // reportes confirmados desde este dispositivo
+const VERSION_KEY = "rios_panama_version_datos";
+
+// Si los datos de ejemplo cambiaron (VERSION_DATOS en generarReportes.js), se
+// descarta lo guardado en este navegador para que la app cargue los nuevos.
+// Ojo: esto también borra los reportes creados en este dispositivo.
+if (localStorage.getItem(VERSION_KEY) !== String(VERSION_DATOS)) {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(PENDING_KEY);
+  localStorage.removeItem(CONFIRM_KEY);
+  localStorage.setItem(VERSION_KEY, String(VERSION_DATOS));
+}
+
+// Un reporte cuenta para la alerta de foco crítico si sigue abierto (no ha
+// sido atendido) y es de los últimos 30 días.
+function esReporteActivo(r) {
+  const limite = new Date();
+  limite.setDate(limite.getDate() - 30);
+  return r.estado !== "atendido" && r.fecha >= limite.toISOString().slice(0, 10);
+}
+
+// Ríos con foco crítico: 3 o más reportes activos sobre el mismo río.
+export function riosConFocoCritico(reports) {
+  const conteo = {};
+  reports.filter(esReporteActivo).forEach((r) => {
+    conteo[r.rio] = (conteo[r.rio] || 0) + 1;
+  });
+  return Object.entries(conteo)
+    .filter(([, total]) => total >= 3)
+    .map(([rio, total]) => ({ rio, total }));
+}
 
 // Este hook simula una base de datos usando localStorage, para que el
 // prototipo funcione sin backend. Para producción, reemplaza getAll/addReport
@@ -11,6 +43,11 @@ export function useReports() {
   const [reports, setReports] = useState([]);
   const [pendientes, setPendientes] = useState([]);
   const [online, setOnline] = useState(navigator.onLine);
+  // Ids de los reportes que este dispositivo ya confirmó ("yo también lo vi").
+  const [confirmados, setConfirmados] = useState(() => {
+    const saved = localStorage.getItem(CONFIRM_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -73,13 +110,28 @@ export function useReports() {
 
   // Regla simple de alerta: 3+ reportes activos sobre el mismo río -> foco crítico.
   function tieneFocoCritico(rio) {
-    return reports.filter((r) => r.rio === rio).length >= 3;
+    return riosConFocoCritico(reports).some((c) => c.rio === rio);
   }
 
   // Escala un reporte a la autoridad correspondiente (simulado para el prototipo).
   function escalarReporte(id) {
     const next = reports.map((r) => (r.id === id ? { ...r, estado: "enviado a autoridad" } : r));
     persistReports(next);
+  }
+
+  // Confirma (o retira la confirmación de) un reporte: suma o resta 1 al
+  // contador de vecinos y recuerda en este dispositivo que ya se confirmó,
+  // para que una misma persona no pueda sumar varias veces.
+  function alternarConfirmacion(id) {
+    const yaConfirmado = confirmados.includes(id);
+    const cambio = yaConfirmado ? -1 : 1;
+    persistReports(
+      reports.map((r) => (r.id === id ? { ...r, confirmaciones: Math.max(0, r.confirmaciones + cambio) } : r))
+    );
+    const next = yaConfirmado ? confirmados.filter((c) => c !== id) : [...confirmados, id];
+    setConfirmados(next);
+    localStorage.setItem(CONFIRM_KEY, JSON.stringify(next));
+    return cambio;
   }
 
   // Agrupa los reportes de un río en 6 bloques de 5 días (30 días en total),
@@ -110,6 +162,8 @@ export function useReports() {
     addReport,
     tieneFocoCritico,
     escalarReporte,
+    confirmados,
+    alternarConfirmacion,
     tendenciaUltimos30Dias,
   };
 }

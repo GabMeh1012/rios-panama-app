@@ -1,6 +1,10 @@
-import { MapContainer, TileLayer, CircleMarker, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip } from "react-leaflet";
+import { riosTrazos, COLOR_RIO } from "../data/riosTrazos";
 import "leaflet/dist/leaflet.css";
-import { getInfoGeneral } from "../data/riosInfo";
+import { useState } from "react";
+import { getInfoGeneral, FUENTE_INFO_GENERAL } from "../data/riosInfo";
+import { tiposContaminacion } from "../data/seedReports";
+import TipoIcon from "./TipoIcon";
 import { formatearFechaRelativa } from "../utils/fecha";
 
 const labelSeveridad = { critico: "Crítico", moderado: "Moderado", leve: "Leve" };
@@ -27,9 +31,44 @@ function temaDelRio(nombreRio) {
   };
 }
 
-export default function DetalleScreen({ report, reports, focoCritico, tendencia, onEscalar }) {
+// Color fijo de cada contaminante en la gráfica de "Contaminantes más
+// comunes": el color acompaña al contaminante (no a su posición), así un mismo
+// tipo se ve igual en todos los ríos. No se usa rojo porque en la app el rojo
+// significa "crítico". Los tipos menos frecuentes comparten un gris neutro.
+const colorPorContaminante = {
+  "Plásticos de un solo uso": "#2a78d6",
+  "Contaminación industrial": "#eb6834",
+  "Aceites e hidrocarburos": "#1baf7a",
+  "Basura doméstica": "#eda100",
+  "Sedimentos / tierra removida": "#e87ba4",
+  "Químicos agrícolas": "#008300",
+  "Aguas negras": "#4a3aa7",
+};
+const COLOR_OTROS = "#898781";
+
+// Tendencia: un solo tono de azul (es una sola medida en el tiempo), con el
+// bloque más reciente en un azul más oscuro para destacarlo.
+const COLOR_TENDENCIA = "#6da7ec";
+const COLOR_TENDENCIA_ACTUAL = "#184f95";
+
+// Para mostrar el ícono de cada tipo de contaminación a partir de su nombre.
+const idPorTipo = Object.fromEntries(tiposContaminacion.map((t) => [t.label, t.id]));
+
+export default function DetalleScreen({ report, reports, focoCritico, tendencia, onEscalar, confirmado, onConfirmar }) {
   const yaEscalado = report.estado === "enviado a autoridad";
   const tema = temaDelRio(report.rio);
+  const [copiado, setCopiado] = useState(false);
+
+  const tiposDelReporte = report.tipos && report.tipos.length ? report.tipos : [report.tipo];
+  const coordsTexto = `${report.lat.toFixed(4)}, ${report.lng.toFixed(4)}`;
+
+  function copiarCoordenadas() {
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(coordsTexto).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1800);
+    });
+  }
 
   // Todos los reportes de este mismo río (cada uno puede ser un tramo distinto),
   // ordenados del más reciente al más antiguo.
@@ -96,7 +135,11 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
 
   // Información GENERAL del río (cuenca, longitud, uso, inspección oficial) —
   // no se calcula a partir de los reportes, es un dato propio del río.
-  const infoGeneral = getInfoGeneral(report.rio);
+  const infoGeneral = getInfoGeneral(report);
+
+  // Cauce del río para el mapa de abajo (si el nombre no está registrado, el
+  // del río conocido más cercano por ubicación).
+  const trazoDelRio = riosTrazos[report.rio] || (infoGeneral && riosTrazos[infoGeneral.rio]);
 
   return (
     <div className="screen">
@@ -135,13 +178,67 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
 
         <div className="detail-desc">{report.descripcion}</div>
 
-        <div className="detail-row">👥 {report.confirmaciones} vecinos confirmaron</div>
-        <div className="detail-row">🧪 Tipo: {report.tipos ? report.tipos.join(", ") : report.tipo}</div>
+        {/* Confirmación de vecinos: el botón suma (o retira) la confirmación
+            de este dispositivo al contador real del reporte. */}
+        <div className={`confirm-card${confirmado ? " is-on" : ""}`}>
+          <div className="confirm-count" key={report.confirmaciones}>{report.confirmaciones}</div>
+          <div className="confirm-text">
+            <b>{report.confirmaciones === 1 ? "vecino confirmó" : "vecinos confirmaron"}</b>
+            <span>
+              {confirmado
+                ? "Gracias, tu confirmación ya cuenta."
+                : report.confirmaciones === 0
+                  ? "Sé el primero en confirmar este reporte."
+                  : "¿Tú también lo viste?"}
+            </span>
+          </div>
+          <button className="confirm-btn" aria-pressed={confirmado} onClick={() => onConfirmar(report.id)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              {confirmado ? <path d="M5 12.5l4.5 4.5L19 7.5" /> : <path d="M12 5v14M5 12h14" />}
+            </svg>
+            {confirmado ? "Confirmado" : "Yo también"}
+          </button>
+        </div>
+
+        <div className="detail-label">Tipo de contaminación</div>
+        <div className="detail-chips">
+          {tiposDelReporte.map((t) => (
+            <span key={t} className="detail-chip">
+              <TipoIcon id={idPorTipo[t] || "otr"} size={14} />
+              {t}
+            </span>
+          ))}
+        </div>
+
         {report.marcas && report.marcas.length > 0 && (
-          <div className="detail-row">🏷️ Marcas visibles: {report.marcas.join(", ")}</div>
+          <>
+            <div className="detail-label">Marcas visibles</div>
+            <div className="detail-chips">
+              {report.marcas.map((m) => (
+                <span key={m} className="detail-chip is-plain">{m}</span>
+              ))}
+            </div>
+          </>
         )}
-        <div className="detail-row">
-          📍 {report.lat.toFixed(4)}, {report.lng.toFixed(4)}
+
+        <div className="detail-label">Ubicación</div>
+        <div className="location-card">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--teal)", flexShrink: 0 }}>
+            <path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.800 12 21 12 21z" />
+            <circle cx="12" cy="9.500" r="2.500" />
+          </svg>
+          <span className="location-coords">{coordsTexto}</span>
+          <button className="location-action" onClick={copiarCoordenadas}>
+            {copiado ? "Copiado ✓" : "Copiar"}
+          </button>
+          <a
+            className="location-action is-primary"
+            href={`https://www.google.com/maps?q=${report.lat},${report.lng}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Ver en mapa
+          </a>
         </div>
       </div>
 
@@ -178,7 +275,10 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
                     <b>{pct}%</b>
                   </div>
                   <div className="stat-bar-track">
-                    <div className="stat-bar-fill" style={{ width: `${pct}%`, background: "var(--teal)" }} />
+                    <div
+                      className="stat-bar-fill"
+                      style={{ width: `${pct}%`, background: colorPorContaminante[c.label] || COLOR_OTROS }}
+                    />
                   </div>
                 </div>
               );
@@ -196,18 +296,19 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
       <div style={{ margin: "0 16px 18px" }}>
         {totalTendencia > 0 ? (
           <>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 70 }}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 84 }}>
               {tendencia.map((t, i) => (
                 <div key={t.inicio} style={{ textAlign: "center", flex: 1 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 3 }}>
+                    {t.total}
+                  </div>
                   <div
                     style={{
-                      height: `${(t.total / maxTotal) * 50 + 6}px`,
-                      background: i === tendencia.length - 1
-                        ? "linear-gradient(180deg, var(--critico), #8a2f2f)"
-                        : "linear-gradient(180deg, var(--teal), var(--navy))",
-                      borderRadius: 4,
+                      height: `${(t.total / maxTotal) * 54 + 4}px`,
+                      background: i === tendencia.length - 1 ? COLOR_TENDENCIA_ACTUAL : COLOR_TENDENCIA,
+                      borderRadius: "4px 4px 0 0",
                     }}
-                    title={`${t.total} reportes`}
+                    title={`${t.total} ${t.total === 1 ? "reporte" : "reportes"} · ${t.inicio} a ${t.fin}`}
                   />
                 </div>
               ))}
@@ -244,21 +345,34 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
         </p>
       )}
 
-      {/* Información GENERAL del río (no de los reportes): cuenca, longitud,
-          uso principal, última inspección oficial. Si no tenemos datos
-          verificados para este río, se dice honestamente en vez de inventar. */}
+      {/* Información GENERAL del río (no de los reportes): cuenca, superficie,
+          longitud, vertiente y uso principal. Si no tenemos datos verificados
+          para este río, se dice honestamente en vez de inventar. */}
       <div className="section-title">Información adicional</div>
       {infoGeneral ? (
-        <dl className="info-card">
-          <dt>Cuenca hidrográfica</dt>
-          <dd>{infoGeneral.cuenca}</dd>
-          <dt>Longitud aproximada</dt>
-          <dd>{infoGeneral.longitud}</dd>
-          <dt>Uso principal</dt>
-          <dd>{infoGeneral.usoPrincipal}</dd>
-          <dt>Última inspección oficial</dt>
-          <dd>{infoGeneral.ultimaInspeccion}</dd>
-        </dl>
+        <div className="info-card">
+          {infoGeneral.porUbicacion && (
+            <p style={{ fontSize: 11.5, color: "var(--text-secondary)", margin: "0 0 10px" }}>
+              No tenemos registrado un río con el nombre «{report.rio}». Por su ubicación, este punto está en la zona
+              del <b>{infoGeneral.rio}</b>; estos son sus datos.
+            </p>
+          )}
+          <dl style={{ margin: 0 }}>
+            <dt>Cuenca hidrográfica</dt>
+            <dd>{infoGeneral.cuenca}</dd>
+            <dt>Superficie de la cuenca</dt>
+            <dd>{infoGeneral.superficie}</dd>
+            <dt>Longitud del río principal</dt>
+            <dd>{infoGeneral.longitud}</dd>
+            <dt>Vertiente</dt>
+            <dd>{infoGeneral.vertiente}</dd>
+            <dt>Uso principal</dt>
+            <dd>{infoGeneral.usoPrincipal}</dd>
+          </dl>
+          <p style={{ fontSize: 10.5, color: "var(--text-secondary)", margin: "10px 0 0" }}>
+            Fuente: {FUENTE_INFO_GENERAL}.
+          </p>
+        </div>
       ) : (
         <p style={{ margin: "0 16px 18px", fontSize: 12, color: "var(--text-secondary)" }}>
           Aún no tenemos información general verificada para este río (cuenca, longitud, uso principal). Solo se
@@ -276,6 +390,9 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
             scrollWheelZoom={false}
           >
             <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            {trazoDelRio && (
+              <Polyline positions={trazoDelRio} pathOptions={{ color: COLOR_RIO, weight: 4, opacity: 0.85 }} />
+            )}
             {delMismoRio.map((r) => (
               <CircleMarker
                 key={r.id}

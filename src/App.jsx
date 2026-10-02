@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useReports } from "./data/useReports";
+import { useReports, riosConFocoCritico } from "./data/useReports";
 import { comentariosSemilla } from "./data/seedReports";
 import MapaScreen from "./components/MapaScreen";
 import NuevoReporteScreen from "./components/NuevoReporteScreen";
@@ -15,8 +15,17 @@ import BottomNav from "./components/BottomNav";
 const PANTALLAS_CON_NAV = ["mapa", "perfil"];
 
 export default function App() {
-  const { reports, pendientes, online, addReport, tieneFocoCritico, escalarReporte, tendenciaUltimos30Dias } =
-    useReports();
+  const {
+    reports,
+    pendientes,
+    online,
+    addReport,
+    tieneFocoCritico,
+    escalarReporte,
+    confirmados,
+    alternarConfirmacion,
+    tendenciaUltimos30Dias,
+  } = useReports();
   const [pantalla, setPantalla] = useState("mapa"); // "mapa" | "nuevo" | "detalle" | "login" | "perfil"
   const [seleccionado, setSeleccionado] = useState(null);
   const [usuario, setUsuario] = useState(null);
@@ -28,13 +37,7 @@ export default function App() {
 
   // Ríos con foco crítico (3+ reportes activos), para las alertas reales de
   // la campanita del header — no son alertas inventadas.
-  const conteoPorRio = {};
-  reports.forEach((r) => {
-    conteoPorRio[r.rio] = (conteoPorRio[r.rio] || 0) + 1;
-  });
-  const riosCriticos = Object.entries(conteoPorRio)
-    .filter(([, total]) => total >= 3)
-    .map(([rio, total]) => ({ rio, total }));
+  const riosCriticos = riosConFocoCritico(reports);
 
   function verDetalle(report) {
     setSeleccionado(report);
@@ -55,6 +58,13 @@ export default function App() {
   function handleEscalar(id) {
     escalarReporte(id);
     setSeleccionado((prev) => (prev && prev.id === id ? { ...prev, estado: "enviado a autoridad" } : prev));
+  }
+
+  function handleConfirmar(id) {
+    const cambio = alternarConfirmacion(id);
+    setSeleccionado((prev) =>
+      prev && prev.id === id ? { ...prev, confirmaciones: Math.max(0, prev.confirmaciones + cambio) } : prev
+    );
   }
 
   function irLogin() {
@@ -192,6 +202,8 @@ export default function App() {
           focoCritico={tieneFocoCritico(seleccionado.rio)}
           tendencia={tendenciaUltimos30Dias(seleccionado.rio)}
           onEscalar={handleEscalar}
+          confirmado={confirmados.includes(seleccionado.id)}
+          onConfirmar={handleConfirmar}
         />
       )}
 

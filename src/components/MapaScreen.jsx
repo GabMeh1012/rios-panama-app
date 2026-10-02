@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup, Rectangle, useMap } from "react-leaflet";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, Rectangle, Tooltip, useMap } from "react-leaflet";
+import { riosTrazos, COLOR_RIO } from "../data/riosTrazos";
 import "leaflet/dist/leaflet.css";
 import { noticias, tiposContaminacion } from "../data/seedReports";
 import { zonas, zonasMapa } from "../data/panamaZonas";
 import TipoIcon from "./TipoIcon";
-import { formatearFechaRelativa } from "../utils/fecha";
+import { formatearFechaRelativa, grupoDeFecha } from "../utils/fecha";
 
 const colorPorSeveridad = {
   critico: "#d64545",
@@ -27,6 +28,10 @@ const idPorTipo = Object.fromEntries(tiposContaminacion.map((t) => [t.label, t.i
 function distancia(lat1, lng1, lat2, lng2) {
   return Math.sqrt((lat1 - lat2) ** 2 + (lng1 - lng2) ** 2);
 }
+
+// Cuántos reportes se muestran al inicio en la lista y cuántos suma "Ver más".
+const REPORTES_INICIALES = 5;
+const REPORTES_POR_PAGINA = 10;
 
 const problemas = [
   { id: "todos", label: "Todos" },
@@ -58,12 +63,14 @@ export default function MapaScreen({ reports, usuario, vista, comentarios, onSel
   const [orden, setOrden] = useState("recientes"); // "recientes" | "cerca" | "confirmados"
   const [miUbicacion, setMiUbicacion] = useState(null);
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
+  const [visibles, setVisibles] = useState(REPORTES_INICIALES);
 
   // Refs para el scroll suave hacia cada sección cuando se toca una pestaña
   // del menú o de la barra inferior (Inicio / Mapa / Comunidad).
   const inicioRef = useRef(null);
   const mapaRef = useRef(null);
   const comunidadRef = useRef(null);
+  const carruselRef = useRef(null);
 
   useEffect(() => {
     const refs = { inicio: inicioRef, mapa: mapaRef, comunidad: comunidadRef };
@@ -92,6 +99,52 @@ export default function MapaScreen({ reports, usuario, vista, comentarios, onSel
     }
     return b.fecha.localeCompare(a.fecha);
   });
+
+  // Los primeros reportes se muestran en lista; "Ver más" abre el resto en un
+  // carrusel horizontal que se va cargando por tandas. Al cambiar de filtro o
+  // de pestaña se vuelve a la lista corta.
+  useEffect(() => {
+    setVisibles(REPORTES_INICIALES);
+    carruselRef.current?.scrollTo({ left: 0 });
+  }, [zona, problema, busqueda, orden]);
+
+  const reportesFijos = reportesOrdenados.slice(0, REPORTES_INICIALES);
+  const reportesExtra = reportesOrdenados.slice(REPORTES_INICIALES, visibles);
+  const restantes = Math.max(0, reportesOrdenados.length - visibles);
+
+  function tarjetaReporte(r) {
+    return (
+      <div
+        key={r.id}
+        className={`report-card ${r.severidad} ${r.severidad === "critico" ? "urgente" : ""} ${r.autor ? "ciudadano" : ""}`}
+        onClick={() => onSelect(r)}
+      >
+        <span className={`report-card-icon ${r.severidad}`}>
+          <TipoIcon id={idPorTipo[r.tipo] || "otr"} size={19} />
+        </span>
+        <div className="report-card-body">
+          <div className="report-card-top">
+            <span className="card-title">{r.rio}</span>
+            <span className={`badge ${r.severidad}`}>{labelSeveridad[r.severidad]}</span>
+          </div>
+          <p className="card-sub" style={{ margin: "2px 0 0" }}>
+            {r.tipos ? r.tipos.join(", ") : r.tipo}
+            {r.autor ? ` · Reportado por ${r.autor}` : ""}
+          </p>
+          <div className="report-card-meta">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="9" cy="8" r="3"></circle>
+              <path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"></path>
+            </svg>
+            {r.confirmaciones} confirmaron <span style={{ opacity: 0.6 }}>· {formatearFechaRelativa(r.fecha)}</span>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
+          <path d="M9 6l6 6-6 6"></path>
+        </svg>
+      </div>
+    );
+  }
 
   function elegirOrden(o) {
     setOrden(o);
@@ -178,6 +231,12 @@ export default function MapaScreen({ reports, usuario, vista, comentarios, onSel
               pathOptions={{ color: zonasMapa[zona].color, weight: 2, fillOpacity: 0.12 }}
             />
           )}
+          {/* Cauce completo de cada río conocido, en azul, debajo de los puntos. */}
+          {Object.entries(riosTrazos).map(([rio, tramos]) => (
+            <Polyline key={rio} positions={tramos} pathOptions={{ color: COLOR_RIO, weight: 3, opacity: 0.85 }}>
+              <Tooltip sticky>{rio}</Tooltip>
+            </Polyline>
+          ))}
           {filtrados.map((r) => (
             <CircleMarker
               key={r.id}
@@ -196,7 +255,7 @@ export default function MapaScreen({ reports, usuario, vista, comentarios, onSel
         </MapContainer>
       </div>
       <p style={{ margin: "0 14px 4px", fontSize: 11, color: "var(--text-secondary)" }}>
-        Toca "{zona}" arriba para resaltar esa zona en el mapa. Cada punto es un tramo o río reportado por la comunidad.
+        Toca "{zona}" arriba para resaltar esa zona en el mapa. Las líneas azules son el cauce de cada río; cada punto es un tramo reportado por la comunidad.
       </p>
 
       <div className="section-title">Reportes recientes {filtrados.length !== reports.length ? `(${filtrados.length})` : ""}</div>
@@ -221,55 +280,82 @@ export default function MapaScreen({ reports, usuario, vista, comentarios, onSel
         </p>
       )}
 
+      {reportesOrdenados.length === 0 && (
+        <p style={{ padding: "0 14px", fontSize: 12, color: "var(--text-secondary)" }}>
+          No hay reportes con estos filtros.
+        </p>
+      )}
+      {/* Los primeros reportes van en lista, uno debajo del otro. */}
       <div>
-        {reportesOrdenados.length === 0 && (
-          <p style={{ padding: "0 14px", fontSize: 12, color: "var(--text-secondary)" }}>
-            No hay reportes con estos filtros.
-          </p>
-        )}
-        {reportesOrdenados.map((r) => (
-          <div
-            key={r.id}
-            className={`report-card ${r.severidad} ${r.severidad === "critico" ? "urgente" : ""} ${r.autor ? "ciudadano" : ""}`}
-            onClick={() => onSelect(r)}
-          >
-            <span className={`report-card-icon ${r.severidad}`}>
-              <TipoIcon id={idPorTipo[r.tipo] || "otr"} size={19} />
-            </span>
-            <div className="report-card-body">
-              <div className="report-card-top">
-                <span className="card-title">{r.rio}</span>
-                <span className={`badge ${r.severidad}`}>{labelSeveridad[r.severidad]}</span>
-              </div>
-              <p className="card-sub" style={{ margin: "2px 0 0" }}>
-                {r.tipos ? r.tipos.join(", ") : r.tipo}
-                {r.autor ? ` · Reportado por ${r.autor}` : ""}
-              </p>
-              <div className="report-card-meta">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="9" cy="8" r="3"></circle>
-                  <path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"></path>
-                </svg>
-                {r.confirmaciones} confirmaron <span style={{ opacity: 0.6 }}>· {formatearFechaRelativa(r.fecha)}</span>
-              </div>
-            </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
-              <path d="M9 6l6 6-6 6"></path>
-            </svg>
-          </div>
-        ))}
+        {reportesFijos.map((r, i) => {
+          // Separador por fecha (solo en "Recientes"): se pinta cuando el
+          // reporte abre un grupo nuevo respecto al anterior.
+          const grupo = orden === "recientes" ? grupoDeFecha(r.fecha) : null;
+          const abreGrupo = grupo && (i === 0 || grupoDeFecha(reportesFijos[i - 1].fecha) !== grupo);
+          return (
+            <Fragment key={r.id}>
+              {abreGrupo && <div className="report-group-label">{grupo}</div>}
+              {tarjetaReporte(r)}
+            </Fragment>
+          );
+        })}
       </div>
+
+      {/* El resto se abre con "Ver más" en un carrusel que se desliza a
+          izquierda y derecha, para no alargar la pantalla hacia abajo. */}
+      {reportesExtra.length > 0 && (
+        <>
+          <div className="report-group-label">Más reportes · desliza hacia los lados</div>
+          <div ref={carruselRef} className="report-carousel">
+            {reportesExtra.map(tarjetaReporte)}
+            {restantes > 0 && (
+              <button className="report-more-card" onClick={() => setVisibles((v) => v + REPORTES_POR_PAGINA)}>
+                <b>+{Math.min(REPORTES_POR_PAGINA, restantes)}</b>
+                Ver más
+              </button>
+            )}
+          </div>
+        </>
+      )}
+      {reportesOrdenados.length > REPORTES_INICIALES && (
+        <div className="report-more">
+          <span>
+            Mostrando {visibles > REPORTES_INICIALES ? Math.min(visibles, reportesOrdenados.length) : REPORTES_INICIALES} de{" "}
+            {reportesOrdenados.length}
+          </span>
+          {reportesExtra.length === 0 ? (
+            <button onClick={() => setVisibles(REPORTES_INICIALES + REPORTES_POR_PAGINA)}>Ver más reportes</button>
+          ) : (
+            <button onClick={() => setVisibles(REPORTES_INICIALES)}>Ver menos</button>
+          )}
+        </div>
+      )}
 
       <div className="section-title">Noticias</div>
       <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "0 14px 12px" }}>
         {noticias.map((n) => (
-          <div key={n.titulo} style={{ flexShrink: 0, width: 150, border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden" }}>
-            <div style={{ height: 50, background: n.color }} />
+          <a
+            key={n.url}
+            href={n.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ flexShrink: 0, width: 170, border: "1px solid var(--border)", borderRadius: 12, overflow: "hidden", textDecoration: "none", color: "inherit" }}
+          >
+            <div style={{ height: 90, background: n.color }}>
+              <img
+                src={n.imagen}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            </div>
             <div style={{ padding: 8 }}>
               <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.4 }}>{n.titulo}</div>
               <div style={{ fontSize: 10, color: "var(--text-secondary)", marginTop: 4 }}>{n.fuente}</div>
             </div>
-          </div>
+          </a>
         ))}
       </div>
 

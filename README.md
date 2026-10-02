@@ -49,8 +49,9 @@ src/
   usuario no da permiso, se usa una coordenada simulada para que el flujo no
   se rompa.
 - La "alerta de foco crítico" es una regla simple: si un mismo río acumula 3
-  o más reportes, se muestra la alerta en el detalle (ver useReports.js,
-  función tieneFocoCritico).
+  o más reportes activos (sin atender y de los últimos 30 días), se muestra
+  la alerta en el detalle y en la campanita (ver useReports.js, función
+  riosConFocoCritico).
 
 ## Conectar Firebase (siguiente paso, opcional)
 
@@ -105,16 +106,25 @@ react-leaflet.
 
 ## Datos de ejemplo
 
-- El río Pacora tiene más reportes de ejemplo (`src/data/seedReports.js`) que
-  los demás a propósito, distribuidos en los últimos 30 días, para poder
-  mostrar completa la pantalla de detalle (tendencia, contaminantes más
-  comunes, historial) con datos reales calculados de verdad — no cifras
-  inventadas puestas a mano.
+- Los reportes de ejemplo los genera el script `src/data/generarReportes.js`
+  (entre 3 y 20 por río, 90 en total). Son datos **ilustrativos**, no
+  reportes reales de vecinos: sirven para mostrar completas las pantallas
+  (mapa, tendencia, contaminantes más comunes, historial, alertas). La
+  cantidad y gravedad por río sigue lo documentado en prensa (Pacora, La
+  Villa, Juan Díaz y Matasnillo son los más afectados), cada punto cae sobre
+  el cauce real del río y las fechas se calculan hacia atrás desde el día en
+  que se abre la app.
+- Para cambiar los datos de ejemplo, edita `configRios` en ese archivo y sube
+  `VERSION_DATOS`: la app descarta lo guardado en el navegador y carga los
+  datos nuevos (esto también borra los reportes creados en ese dispositivo).
+- `src/data/riosTrazos.json` tiene el cauce de cada río conocido, tomado de
+  OpenStreetMap (© colaboradores de OpenStreetMap, ODbL), para dibujarlo en
+  azul en el mapa.
 - `src/data/riosInfo.js` tiene la "información general" de cada río (cuenca,
-  longitud aproximada, uso principal, última inspección oficial). Esto es
-  investigación propia para el prototipo, no una API oficial en tiempo real,
-  así que son aproximados. Si un río no está en esa lista, la pantalla de
-  detalle lo dice honestamente en vez de inventar los datos.
+  superficie, longitud, vertiente, uso principal), tomada de la tabla de
+  cuencas hidrográficas de ETESA. No es una API oficial en tiempo real. Si
+  un río no está en esa lista, la pantalla de detalle lo dice honestamente
+  en vez de inventar los datos.
 - El "corregimiento" de cada río (`riosConocidos` en `seedReports.js`) es una
   referencia aproximada al corregimiento más cercano, no un límite
   administrativo oficial verificado — igual que las zonas del mapa

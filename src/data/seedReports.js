@@ -1,261 +1,11 @@
-// Reportes de ejemplo, basados en casos reales documentados en prensa panameña.
-// En producción, estos vendrían de la base de datos (Firebase Firestore, por ejemplo).
-// El río Pacora tiene más reportes de ejemplo que los demás a propósito, para
-// poder mostrar completa la pantalla de detalle (tendencia de 30 días,
-// contaminantes más comunes, historial, etc.) con datos reales de verdad, no
-// inventados — ver README, sección "Datos de ejemplo".
-export const seedReports = [
-  {
-    id: "r1",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0865,
-    lng: -79.2725,
-    tipo: "Aguas negras",
-    severidad: "critico",
-    descripcion:
-      "Agua con color oscuro cerca de la toma del IDAAN. Comunidad reporta afluentes Utivé, Indio y San Miguel contaminados por porquerizas y basura.",
-    fecha: "2026-08-20",
-    confirmaciones: 7,
-    estado: "en revisión",
-  },
-  {
-    id: "r1b",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.087,
-    lng: -79.271,
-    tipo: "Basura doméstica",
-    severidad: "moderado",
-    descripcion: "Basura acumulada en la orilla, cerca del puente principal.",
-    fecha: "2026-08-05",
-    confirmaciones: 3,
-    estado: "nuevo",
-  },
-  {
-    id: "r1c",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.086,
-    lng: -79.273,
-    tipo: "Aguas negras",
-    severidad: "moderado",
-    descripcion: "Olor fuerte y espuma en la superficie del agua.",
-    fecha: "2026-07-12",
-    confirmaciones: 5,
-    estado: "atendido",
-  },
-  {
-    id: "r1d",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.088,
-    lng: -79.27,
-    tipo: "Aceites e hidrocarburos",
-    severidad: "leve",
-    descripcion: "Ligera capa de aceite visible tras la lluvia.",
-    fecha: "2026-06-18",
-    confirmaciones: 1,
-    estado: "atendido",
-  },
-  // Reportes adicionales de los últimos 30 días para Río Pacora, para que la
-  // pantalla de detalle (tendencia, historial, contaminantes) tenga datos
-  // reales suficientes que mostrar en el prototipo.
-  {
-    id: "r1e",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0868,
-    lng: -79.2718,
-    tipo: "Basura doméstica",
-    severidad: "leve",
-    descripcion: "Bolsas y envases acumulados tras el fin de semana.",
-    fecha: "2026-09-01",
-    confirmaciones: 2,
-    estado: "atendido",
-  },
-  {
-    id: "r1f",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0862,
-    lng: -79.2731,
-    tipo: "Aguas negras",
-    severidad: "moderado",
-    descripcion: "Agua turbia con espuma cerca del sector Utivé.",
-    fecha: "2026-09-07",
-    confirmaciones: 3,
-    estado: "en revisión",
-  },
-  {
-    id: "r1g",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0871,
-    lng: -79.2709,
-    tipo: "Mal olor",
-    severidad: "leve",
-    descripcion: "Olor fuerte reportado por vecinos cerca del puente.",
-    fecha: "2026-09-12",
-    confirmaciones: 1,
-    estado: "nuevo",
-  },
-  {
-    id: "r1h",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0859,
-    lng: -79.2727,
-    tipo: "Aguas negras",
-    severidad: "critico",
-    descripcion: "Descarga visible de aguas negras cerca de una porqueriza.",
-    fecha: "2026-09-16",
-    confirmaciones: 6,
-    estado: "en revisión",
-    marcas: ["Cervecería Nacional"],
-  },
-  {
-    id: "r1i",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0874,
-    lng: -79.2716,
-    tipo: "Plásticos de un solo uso",
-    severidad: "moderado",
-    descripcion: "Envases plásticos varados en la orilla tras la lluvia.",
-    fecha: "2026-09-18",
-    confirmaciones: 4,
-    estado: "nuevo",
-    marcas: ["Nestlé"],
-  },
-  {
-    id: "r1j",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0857,
-    lng: -79.2733,
-    tipo: "Contaminación industrial",
-    severidad: "critico",
-    descripcion: "Vertido con olor químico proveniente de una porqueriza cercana.",
-    fecha: "2026-09-21",
-    confirmaciones: 7,
-    estado: "en revisión",
-  },
-  {
-    id: "r1k",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0866,
-    lng: -79.2721,
-    tipo: "Aguas negras",
-    severidad: "critico",
-    descripcion: "Agua oscura y espuma persistente cerca de la toma del IDAAN.",
-    fecha: "2026-09-23",
-    confirmaciones: 8,
-    estado: "en revisión",
-    marcas: ["Coca-Cola"],
-  },
-  {
-    id: "r1l",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0869,
-    lng: -79.2712,
-    tipo: "Basura doméstica",
-    severidad: "moderado",
-    descripcion: "Acumulación de desechos sólidos cerca del puente principal.",
-    fecha: "2026-09-26",
-    confirmaciones: 5,
-    estado: "nuevo",
-  },
-  {
-    id: "r1m",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0861,
-    lng: -79.2724,
-    tipo: "Aguas negras",
-    severidad: "critico",
-    descripcion: "Nueva descarga de aguas negras reportada por varios vecinos.",
-    fecha: "2026-09-28",
-    confirmaciones: 10,
-    estado: "nuevo",
-    marcas: ["Coca-Cola", "Cervecería Nacional"],
-  },
-  {
-    id: "r1n",
-    rio: "Río Pacora",
-    provincia: "Panamá Este",
-    corregimiento: "Pacora",
-    lat: 9.0865,
-    lng: -79.2725,
-    tipo: "Aguas negras",
-    severidad: "critico",
-    descripcion: "Situación sin mejora: agua oscura y olor fuerte persisten.",
-    fecha: "2026-09-29",
-    confirmaciones: 9,
-    estado: "nuevo",
-  },
-  {
-    id: "r2",
-    rio: "Río La Villa",
-    provincia: "Azuero (Herrera/Los Santos)",
-    corregimiento: "La Villa",
-    lat: 7.7333,
-    lng: -80.55,
-    tipo: "Contaminación industrial",
-    severidad: "critico",
-    descripcion:
-      "Metales pesados y vinaza afectando la potabilización. Idaan suspendió plantas potabilizadoras en la zona.",
-    fecha: "2026-06-01",
-    confirmaciones: 12,
-    estado: "atendido",
-    marcas: ["Ingenio azucarero local"],
-  },
-  {
-    id: "r3",
-    rio: "Río Juan Díaz",
-    provincia: "Ciudad de Panamá",
-    corregimiento: "Juan Díaz",
-    lat: 9.0295,
-    lng: -79.4685,
-    tipo: "Plásticos de un solo uso",
-    severidad: "moderado",
-    descripcion:
-      "Acumulación de desechos sólidos flotantes en el cauce urbano, cerca de la desembocadura.",
-    fecha: "2026-08-10",
-    confirmaciones: 4,
-    estado: "nuevo",
-    marcas: ["Coca-Cola", "Cervecería Nacional"],
-  },
-  {
-    id: "r4",
-    rio: "Río Matasnillo",
-    provincia: "Ciudad de Panamá",
-    corregimiento: "Bella Vista",
-    lat: 8.9824,
-    lng: -79.5199,
-    tipo: "Aguas negras",
-    severidad: "moderado",
-    descripcion: "Descargas de aguas residuales urbanas en la subcuenca de Betania.",
-    fecha: "2026-07-15",
-    confirmaciones: 2,
-    estado: "nuevo",
-  },
-];
+import { puntoMasCercanoEnRio } from "./riosTrazos";
+import { generarReportesEjemplo } from "./generarReportes";
+
+// Reportes de ejemplo (entre 3 y 20 por río), generados por el script
+// generarReportes.js. Son datos ilustrativos para el prototipo — ver README,
+// sección "Datos de ejemplo". En producción vendrían de la base de datos
+// (Firebase Firestore, por ejemplo).
+export const seedReports = generarReportesEjemplo();
 
 // Categorías de tipo de contaminación (con ícono, ver TipoIcon.jsx) que se
 // usan tanto en el formulario de reporte como en los filtros del mapa.
@@ -316,16 +66,64 @@ export const marcasCategorias = [
   },
 ];
 
+// Noticias reales de medios panameños. `color` se usa de fondo mientras carga
+// la imagen (o si el medio la retira).
 export const noticias = [
   {
-    titulo: "Crisis de agua en La Villa y Estibaná",
-    fuente: "TVN Noticias",
-    color: "#2f6fa5",
+    titulo: "De balones hasta neveras: la basura que no llegó al mar",
+    fuente: "Panamá América",
+    color: "#2f8f6b",
+    imagen: "https://www.panamaamerica.com.pa/sites/default/files/imagenes/2026/09/07/barr_0.jpg",
+    url: "https://www.panamaamerica.com.pa/sociedad/de-balones-hasta-neveras-la-basura-que-no-llego-al-mar-1266065",
   },
   {
-    titulo: "Contaminación del Pacora arriesga a 400 mil personas",
-    fuente: "EcoTV Panamá",
+    titulo: "Contaminación y débil fiscalización marcaron la crisis del agua en Azuero",
+    fuente: "La Prensa",
+    color: "#2f6fa5",
+    imagen: "https://www.prensa.com/resizer/v2/IGWQQSVWQ5HV5H6WXF3SKMBWKE.JPG?auth=86ff398a7e2265f181bbae8829bca57e08ad57846a1c62a389fe712285e3a1bd&width=400",
+    url: "https://www.prensa.com/sociedad/contaminacion-y-debil-fiscalizacion-marcaron-crisis-del-agua-en-azuero/",
+  },
+  {
+    titulo: "Contaminación del río Caimito amenaza abastecimiento de agua en Panamá Oeste",
+    fuente: "TVN Noticias",
     color: "#d64545",
+    imagen: "https://static.tvn-2.com/clip/9020620f-89c6-416e-aa29-4ae8a9c1113f_facebook-aspect-ratio_default_0.jpg",
+    url: "https://www.tvn-2.com/nacionales/contaminacion-rio-caimito-amenaza-abastecimiento-agua-panama-oeste_1_2237987.html",
+  },
+  {
+    titulo: "Cuando llueve, los ríos hablan: toneladas de basura salen a flote",
+    fuente: "La Prensa",
+    color: "#8a6d3b",
+    imagen: "https://www.prensa.com/resizer/v2/H3SWLQCUIBFLTHZGAS6HZ4TPHI.jpeg?auth=75b6acd03a628b4519a08084a4171ff715e2988e0e8d471b24e2c2f044f4d5e2&width=400",
+    url: "https://www.prensa.com/sociedad/cuando-llueve-los-rios-hablan-toneladas-de-basura-salen-a-flote/",
+  },
+  {
+    titulo: "Proyecto Siete Cuencas ampliará la captura de residuos en los ríos que desembocan en la bahía de Panamá",
+    fuente: "La Prensa",
+    color: "#1f9e8f",
+    imagen: "https://www.prensa.com/resizer/v2/75IMOXQ3CFDADN3YSUCIHLR774.JPG?auth=dc9761ac75980f511a4bbc30967b3b659a9398b307dea5f02af25139f410310d&width=400",
+    url: "https://www.prensa.com/sociedad/proyecto-siete-cuencas-ampliara-la-captura-de-residuos-en-los-rios-que-desembocan-en-la-bahia-de-panama/",
+  },
+  {
+    titulo: "Ministro de MiAmbiente, preocupado por contaminación de los cuerpos de agua en Panamá",
+    fuente: "Panamá América",
+    color: "#5b6b7a",
+    imagen: "https://www.panamaamerica.com.pa/sites/default/files/imagenes/2025/09/02/basura_contaminacion_rios_0.jpg",
+    url: "https://www.panamaamerica.com.pa/sociedad/ministro-de-miambiente-preocupado-por-contaminacion-de-los-cuerpos-de-agua-en-panama",
+  },
+  {
+    titulo: "Denuncian ante el Ministerio Público la contaminación del río Pacora por parte de promotoras inmobiliarias",
+    fuente: "TVN Noticias",
+    color: "#d64545",
+    imagen: "https://static.tvn-2.com/clip/7080fbd2-a67f-4401-809f-7e6341b5b046_facebook-aspect-ratio_default_0.jpg",
+    url: "https://www.tvn-2.com/nacionales/diputado-manuel-samaniego-denuncia-contaminacion-rio-pacora-ministerio-publico_1_2199778.html",
+  },
+  {
+    titulo: "Identifican 23 puntos críticos de contaminación en la parte media de la cuenca del río La Villa",
+    fuente: "Panamá América",
+    color: "#2f6fa5",
+    imagen: "https://www.panamaamerica.com.pa/sites/default/files/imagenes/2025/06/06/contaminacion-rio-lavilla_0.jpg",
+    url: "https://www.panamaamerica.com.pa/provincias/identifican-23-puntos-criticos-de-contaminacion-en-la-parte-media-de-la-cuenca-del-rio-la",
   },
 ];
 
@@ -359,13 +157,16 @@ function distancia(lat1, lng1, lat2, lng2) {
   return Math.sqrt((lat1 - lat2) ** 2 + (lng1 - lng2) ** 2);
 }
 
-// Si el pin cae cerca (~5 km) de un río ya conocido, se asocia el reporte a ese río;
-// si no, se guarda como punto nuevo pendiente de identificar.
+// Si el pin cae cerca (~5 km) del cauce de un río ya conocido, se asocia el
+// reporte a ese río; si no, se guarda como punto nuevo pendiente de identificar.
+// La distancia se mide contra el trazo completo del río (o contra su punto de
+// referencia, si no tenemos el trazo).
 export function identificarRio(lat, lng) {
   let masCercano = null;
   let menorDistancia = Infinity;
   for (const r of riosConocidos) {
-    const d = distancia(lat, lng, r.lat, r.lng);
+    const enCauce = puntoMasCercanoEnRio(r.rio, lat, lng);
+    const d = enCauce ? enCauce.distancia : distancia(lat, lng, r.lat, r.lng);
     if (d < menorDistancia) {
       menorDistancia = d;
       masCercano = r;
