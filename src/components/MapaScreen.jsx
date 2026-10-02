@@ -313,7 +313,7 @@ export default function MapaScreen({ reports, usuario, vista, comentarios, onSel
       </div>
 
       {usuario ? (
-        <div style={{ margin: "0 14px 12px", display: "flex", gap: 8 }}>
+        <div style={{ margin: "0 14px 26px", display: "flex", gap: 8 }}>
           <input
             className="field"
             style={{ marginBottom: 0, flex: 1 }}
@@ -329,7 +329,7 @@ export default function MapaScreen({ reports, usuario, vista, comentarios, onSel
         <div
           onClick={onIrLogin}
           style={{
-            margin: "0 14px 12px",
+            margin: "0 14px 26px",
             display: "flex",
             alignItems: "center",
             gap: 8,
