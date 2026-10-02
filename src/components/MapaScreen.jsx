@@ -4,12 +4,25 @@ import "leaflet/dist/leaflet.css";
 import { noticias, comentariosSemilla, tiposContaminacion } from "../data/seedReports";
 import { zonas, zonasMapa } from "../data/panamaZonas";
 import TipoIcon from "./TipoIcon";
+import { formatearFechaRelativa } from "../utils/fecha";
 
 const colorPorSeveridad = {
   critico: "#d64545",
   moderado: "#e0a52c",
   leve: "#2f9e63",
 };
+
+const labelSeveridad = { critico: "Crítico", moderado: "Moderado", leve: "Leve" };
+
+// Para dibujar el ícono correcto en cada tarjeta de "Reportes recientes" a
+// partir del nombre del tipo de contaminación guardado en el reporte.
+const idPorTipo = Object.fromEntries(tiposContaminacion.map((t) => [t.label, t.id]));
+
+// Distancia aproximada en grados, igual que en seedReports.js (suficiente
+// para ordenar "cerca de mí" en un prototipo).
+function distancia(lat1, lng1, lat2, lng2) {
+  return Math.sqrt((lat1 - lat2) ** 2 + (lng1 - lng2) ** 2);
+}
 
 const problemas = [
   { id: "todos", label: "Todos" },
@@ -38,6 +51,9 @@ export default function MapaScreen({ reports, usuario, vista, onSelect, onNuevoR
   const [problema, setProblema] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
   const [comentario, setComentario] = useState("");
+  const [orden, setOrden] = useState("recientes"); // "recientes" | "cerca" | "confirmados"
+  const [miUbicacion, setMiUbicacion] = useState(null);
+  const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
 
   // Refs para el scroll suave hacia cada sección cuando se toca una pestaña
   // del menú o de la barra inferior (Inicio / Mapa / Comunidad).
@@ -59,6 +75,33 @@ export default function MapaScreen({ reports, usuario, vista, onSelect, onNuevoR
       !busqueda.trim() || r.rio.toLowerCase().includes(busqueda.trim().toLowerCase());
     return pasaZona && pasaProblema && pasaBusqueda;
   });
+
+  // Orden real de "Reportes recientes" según la pestaña elegida: por fecha,
+  // por cercanía real al GPS del usuario, o por confirmaciones.
+  const reportesOrdenados = [...filtrados].sort((a, b) => {
+    if (orden === "confirmados") return b.confirmaciones - a.confirmaciones;
+    if (orden === "cerca" && miUbicacion) {
+      return (
+        distancia(miUbicacion.lat, miUbicacion.lng, a.lat, a.lng) -
+        distancia(miUbicacion.lat, miUbicacion.lng, b.lat, b.lng)
+      );
+    }
+    return b.fecha.localeCompare(a.fecha);
+  });
+
+  function elegirOrden(o) {
+    setOrden(o);
+    if (o === "cerca" && !miUbicacion && navigator.geolocation) {
+      setBuscandoUbicacion(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setMiUbicacion({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setBuscandoUbicacion(false);
+        },
+        () => setBuscandoUbicacion(false)
+      );
+    }
+  }
 
   function enviarComentario() {
     if (!usuario) {
@@ -153,22 +196,62 @@ export default function MapaScreen({ reports, usuario, vista, onSelect, onNuevoR
       </p>
 
       <div className="section-title">Reportes recientes {filtrados.length !== reports.length ? `(${filtrados.length})` : ""}</div>
-      <div className="list">
-        {filtrados.length === 0 && (
+
+      <div className="orden-tabs">
+        <button className={`orden-tab ${orden === "recientes" ? "active" : ""}`} onClick={() => elegirOrden("recientes")}>
+          Recientes
+        </button>
+        <button className={`orden-tab ${orden === "cerca" ? "active" : ""}`} onClick={() => elegirOrden("cerca")}>
+          Cerca de mí
+        </button>
+        <button className={`orden-tab ${orden === "confirmados" ? "active" : ""}`} onClick={() => elegirOrden("confirmados")}>
+          Más confirmados
+        </button>
+      </div>
+      {orden === "cerca" && buscandoUbicacion && (
+        <p style={{ margin: "0 14px 10px", fontSize: 11, color: "var(--text-secondary)" }}>Buscando tu ubicación...</p>
+      )}
+      {orden === "cerca" && !buscandoUbicacion && !miUbicacion && (
+        <p style={{ margin: "0 14px 10px", fontSize: 11, color: "var(--text-secondary)" }}>
+          No pudimos usar tu ubicación — mostrando el orden habitual.
+        </p>
+      )}
+
+      <div>
+        {reportesOrdenados.length === 0 && (
           <p style={{ padding: "0 14px", fontSize: 12, color: "var(--text-secondary)" }}>
             No hay reportes con estos filtros.
           </p>
         )}
-        {filtrados.map((r) => (
-          <div className="card" key={r.id} onClick={() => onSelect(r)}>
-            <span className={`dot ${r.severidad}`}></span>
-            <div>
-              <p className="card-title">{r.rio}</p>
-              <p className="card-sub">
-                {r.severidad === "critico" ? "Crítico" : r.severidad === "moderado" ? "Moderado" : "Leve"} ·{" "}
+        {reportesOrdenados.map((r) => (
+          <div
+            key={r.id}
+            className={`report-card ${r.severidad} ${r.severidad === "critico" ? "urgente" : ""} ${r.autor ? "ciudadano" : ""}`}
+            onClick={() => onSelect(r)}
+          >
+            <span className={`report-card-icon ${r.severidad}`}>
+              <TipoIcon id={idPorTipo[r.tipo] || "otr"} size={19} />
+            </span>
+            <div className="report-card-body">
+              <div className="report-card-top">
+                <span className="card-title">{r.rio}</span>
+                <span className={`badge ${r.severidad}`}>{labelSeveridad[r.severidad]}</span>
+              </div>
+              <p className="card-sub" style={{ margin: "2px 0 0" }}>
                 {r.tipos ? r.tipos.join(", ") : r.tipo}
+                {r.autor ? ` · Reportado por ${r.autor}` : ""}
               </p>
+              <div className="report-card-meta">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="9" cy="8" r="3"></circle>
+                  <path d="M2 20c0-3.3 3.1-6 7-6s7 2.7 7 6"></path>
+                </svg>
+                {r.confirmaciones} confirmaron <span style={{ opacity: 0.6 }}>· {formatearFechaRelativa(r.fecha)}</span>
+              </div>
             </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--text-secondary)", flexShrink: 0 }}>
+              <path d="M9 6l6 6-6 6"></path>
+            </svg>
           </div>
         ))}
       </div>

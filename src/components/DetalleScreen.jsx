@@ -1,30 +1,35 @@
 import { MapContainer, TileLayer, CircleMarker, Tooltip } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { getInfoGeneral } from "../data/riosInfo";
+import { formatearFechaRelativa } from "../utils/fecha";
 
 const labelSeveridad = { critico: "Crítico", moderado: "Moderado", leve: "Leve" };
 const colorPorSeveridad = { critico: "#d64545", moderado: "#e0a52c", leve: "#2f9e63" };
-const nombresMes = {
-  "01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May", "06": "Jun",
-  "07": "Jul", "08": "Ago", "09": "Sep", "10": "Oct", "11": "Nov", "12": "Dic",
-};
 
-// "Hoy", "Ayer" o la fecha formateada, calculado con la fecha real del
-// dispositivo (no es un texto fijo).
-function formatearFechaRelativa(fechaStr) {
-  const hoy = new Date();
-  const hoyStr = hoy.toISOString().slice(0, 10);
-  const ayer = new Date(hoy);
-  ayer.setDate(hoy.getDate() - 1);
-  const ayerStr = ayer.toISOString().slice(0, 10);
-  if (fechaStr === hoyStr) return "Hoy";
-  if (fechaStr === ayerStr) return "Ayer";
-  const [, mes, dia] = fechaStr.split("-");
-  return `${parseInt(dia, 10)} ${nombresMes[mes]}`;
+// Genera un color "de firma" propio de cada río (siempre el mismo para el
+// mismo nombre), para que la portada del detalle se sienta distinta de río
+// en río aunque todavía no haya una foto real. No es un dato inventado: es
+// solo una paleta derivada matemáticamente del nombre real del río.
+function hashCadena(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function temaDelRio(nombreRio) {
+  const hue = hashCadena(nombreRio) % 360;
+  return {
+    deep: `hsl(${hue}, 40%, 20%)`,
+    mid: `hsl(${(hue + 35) % 360}, 46%, 36%)`,
+  };
 }
 
 export default function DetalleScreen({ report, reports, focoCritico, tendencia, onEscalar }) {
   const yaEscalado = report.estado === "enviado a autoridad";
+  const tema = temaDelRio(report.rio);
 
   // Todos los reportes de este mismo río (cada uno puede ser un tramo distinto),
   // ordenados del más reciente al más antiguo.
@@ -95,18 +100,36 @@ export default function DetalleScreen({ report, reports, focoCritico, tendencia,
 
   return (
     <div className="screen">
+      {/* Portada del río: foto real si existe, o si no, un color "de firma"
+          propio de ese río (siempre el mismo para el mismo nombre) con una
+          textura de olas, para que cada río se sienta distinto de un
+          vistazo aunque todavía no tenga fotos. */}
       <div
-        className="detail-photo"
-        style={report.foto ? { backgroundImage: `url(${report.foto})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-      />
-      <div className="detail-body">
-        <div className="detail-header">
-          <span className="card-title" style={{ fontSize: 16 }}>
-            {report.rio}
-          </span>
-          <span className={`badge ${report.severidad}`}>{labelSeveridad[report.severidad]}</span>
+        className="detail-hero"
+        style={
+          report.foto
+            ? { backgroundImage: `url(${report.foto})`, backgroundSize: "cover", backgroundPosition: "center" }
+            : { background: `linear-gradient(135deg, ${tema.deep}, ${tema.mid} 75%)` }
+        }
+      >
+        {!report.foto && (
+          <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" className="detail-hero-waves" aria-hidden="true">
+            <path d="M0 120Q100 90 200 115T400 100V200H0Z" fill="#fff" opacity="0.08" />
+            <path d="M0 150Q100 125 200 145T400 130V200H0Z" fill="#fff" opacity="0.1" />
+            <path d="M0 176Q100 156 200 171T400 160V200H0Z" fill="#fff" opacity="0.14" />
+          </svg>
+        )}
+        <div className="detail-hero-scrim" />
+        <div className="detail-hero-text">
+          <span className="logo-type detail-hero-title">{report.rio}</span>
+          <div className="detail-hero-tags">
+            <span className={`badge ${report.severidad}`}>{labelSeveridad[report.severidad]}</span>
+            <span className="detail-hero-tipo">{report.tipos ? report.tipos.join(", ") : report.tipo}</span>
+          </div>
         </div>
-        <p className="detail-meta">
+      </div>
+      <div className="detail-body">
+        <p className="detail-meta" style={{ marginTop: 0 }}>
           {report.provincia} · {report.fecha} · estado: {report.estado}
         </p>
 

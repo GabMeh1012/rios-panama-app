@@ -10,6 +10,7 @@
   --red: #b23b3b;
   --red-bg: #fbe9e9;
   --leve: #2f9e63;
+  --leve-bg: #e5f5ec;
   --moderado: #e0a52c;
   --critico: #d64545;
   --gray-bg: #eef7f5;
@@ -243,6 +244,124 @@ body {
   font-size: 12px;
   color: var(--text-secondary);
   margin: 2px 0 0;
+}
+
+/* Mini-pestañas de orden de "Reportes recientes" */
+.orden-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 14px 2px;
+  margin-bottom: 10px;
+}
+
+.orden-tab {
+  white-space: nowrap;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  color: var(--text-secondary);
+  border-radius: 999px;
+  padding: 6.5px 13px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.orden-tab.active {
+  border: 0;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Tarjeta de reporte reciente, con ícono por tipo de contaminación y meta de
+   confirmaciones/tiempo transcurrido. */
+.report-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 11px 14px 11px 12px;
+  margin: 0 14px 10px;
+  box-shadow: 0 2px 8px rgba(10, 61, 71, 0.06);
+  cursor: pointer;
+}
+
+.report-card:hover {
+  background: var(--gray-bg);
+}
+
+.report-card.critico {
+  border-left-color: var(--critico);
+}
+.report-card.moderado {
+  border-left-color: var(--moderado);
+}
+.report-card.leve {
+  border-left-color: var(--leve);
+}
+
+/* Los reportes críticos resaltan más, para que salten a la vista primero. */
+.report-card.urgente {
+  border: 1.5px solid var(--critico);
+  border-left-width: 4px;
+  box-shadow: 0 4px 14px rgba(214, 69, 69, 0.16);
+}
+
+/* Reportado por un usuario real de la app (tiene autor) en vez de venir de
+   los datos de ejemplo — mismo lenguaje visual que la leyenda del mapa. */
+.report-card.ciudadano {
+  border-left-style: dashed;
+}
+
+.report-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.report-card-icon.critico {
+  background: var(--red-bg);
+  color: var(--critico);
+}
+.report-card-icon.moderado {
+  background: var(--amber-bg);
+  color: var(--moderado);
+}
+.report-card-icon.leve {
+  background: var(--leve-bg);
+  color: var(--leve);
+}
+
+.report-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.report-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.report-card-top .badge {
+  padding: 1.5px 8px;
+  font-size: 10px;
+}
+
+.report-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--text-secondary);
 }
 
 .fab {
@@ -546,11 +665,60 @@ body {
   margin: -8px 0 12px;
 }
 
-.detail-photo {
+.detail-hero {
+  position: relative;
   height: 200px;
-  background: linear-gradient(135deg, var(--navy), var(--teal));
   background-size: cover;
   background-position: center;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.detail-hero-waves {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.detail-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(6, 25, 28, 0.78) 0%, rgba(6, 25, 28, 0.15) 55%, rgba(6, 25, 28, 0) 85%);
+}
+
+.detail-hero-text {
+  position: relative;
+  z-index: 1;
+  padding: 0 16px 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.detail-hero-title {
+  display: block;
+  font-size: 22px;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(6, 25, 28, 0.5);
+}
+
+.detail-hero-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.detail-hero-tipo {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  backdrop-filter: blur(2px);
 }
 
 .badge {
