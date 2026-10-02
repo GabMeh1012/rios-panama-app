@@ -200,6 +200,53 @@ body {
   box-shadow: 0 8px 18px rgba(10, 61, 71, 0.14);
 }
 
+/* Tarjeta resumen al inicio de la sección Comunidad: avatares de quienes
+   han comentado, conteo real de comentarios y una descripción corta. */
+.community-card {
+  margin: 0 14px 14px;
+  background: var(--gray-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.community-avatars {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.community-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.community-avatar + .community-avatar {
+  margin-left: -8px;
+}
+
+.community-stat {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.community-stat b {
+  color: #16302f;
+}
+
+.community-desc {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 .list {
   padding: 8px 0;
 }

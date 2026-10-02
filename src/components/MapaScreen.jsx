@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, Rectangle, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { noticias, comentariosSemilla, tiposContaminacion } from "../data/seedReports";
+import { noticias, tiposContaminacion } from "../data/seedReports";
 import { zonas, zonasMapa } from "../data/panamaZonas";
 import TipoIcon from "./TipoIcon";
 import { formatearFechaRelativa } from "../utils/fecha";
@@ -13,6 +13,10 @@ const colorPorSeveridad = {
 };
 
 const labelSeveridad = { critico: "Crítico", moderado: "Moderado", leve: "Leve" };
+
+// Colores para los avatares apilados de la tarjeta de Comunidad (solo
+// estilo, se repiten en orden fijo, no representan nada de cada persona).
+const coloresAvatar = ["var(--sky)", "var(--teal)", "var(--critico)"];
 
 // Para dibujar el ícono correcto en cada tarjeta de "Reportes recientes" a
 // partir del nombre del tipo de contaminación guardado en el reporte.
@@ -45,7 +49,7 @@ function VistaZona({ zona }) {
   return null;
 }
 
-export default function MapaScreen({ reports, usuario, vista, onSelect, onNuevoReporte, onIrLogin, onComentar }) {
+export default function MapaScreen({ reports, usuario, vista, comentarios, onSelect, onNuevoReporte, onIrLogin, onComentar }) {
   const centro = [8.6, -80.2]; // vista general de Panamá
   const [zona, setZona] = useState("Todas");
   const [problema, setProblema] = useState("todos");
@@ -270,8 +274,29 @@ export default function MapaScreen({ reports, usuario, vista, onSelect, onNuevoR
       </div>
 
       <div ref={comunidadRef} className="section-title">Comunidad</div>
+
+      <div className="community-card">
+        <div className="community-avatars">
+          {comentarios.slice(0, 3).map((c, i) => (
+            <span
+              key={i}
+              className="community-avatar"
+              style={{ background: coloresAvatar[i % coloresAvatar.length], zIndex: 3 - i }}
+            >
+              {c.iniciales}
+            </span>
+          ))}
+        </div>
+        <span className="community-stat">
+          <b>{comentarios.length}</b> {comentarios.length === 1 ? "comentario" : "comentarios"} de la comunidad
+        </span>
+        <p className="community-desc">
+          Comparte lo que ves en tu río y entérate de lo que reportan tus vecinos.
+        </p>
+      </div>
+
       <div style={{ padding: "0 14px 8px" }}>
-        {comentariosSemilla.map((c, i) => (
+        {comentarios.map((c, i) => (
           <div key={i} style={{ display: "flex", gap: 8, marginBottom: 10 }}>
             <div style={{ width: 26, height: 26, borderRadius: "50%", background: "var(--gray-bg)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, flexShrink: 0, color: "var(--teal)" }}>
               {c.iniciales}

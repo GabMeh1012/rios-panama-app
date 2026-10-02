@@ -153,6 +153,7 @@ export default function App() {
           reports={reports}
           usuario={usuario}
           vista={vista}
+          comentarios={comentarios}
           onSelect={verDetalle}
           onNuevoReporte={irNuevoReporte}
           onIrLogin={irLogin}
